@@ -180,7 +180,7 @@ class KobartEDADataset(_DatasetBase):
 
     def __getitem__(self, idx):
         row = self.data.iloc[idx]
-        context = row['context']
+        context = row['original']
         context = (
             self.eda(context) 
             if random.random() < self.pp
@@ -245,7 +245,7 @@ class KobartLabeledDataset(_DatasetBase):
 
     def __getitem__(self, idx):
         row = self.data.iloc[idx]
-        context = preprocess(row['context'])
+        context = preprocess(row['original'])
         summary = preprocess(row['summary'])
         return self.tokenizer.tokenize(context), summary
 
@@ -264,7 +264,7 @@ class KobartEvalDataset(_DatasetBase):
         )
 
     def __getitem__(self, idx):
-        context = self.data.iloc[idx]['context']
+        context = self.data.iloc[idx]['original']
         context_tokens = self.tokenizer.tokenize(preprocess(context))[:self.max_seq_length]
         return context_tokens
 
@@ -302,7 +302,7 @@ class KobartDatasetForPreTraining(_DatasetBase):
         if max_length <= 0:
             return []
         
-        text = self.data.iloc[idx]['context']
+        text = self.data.iloc[idx]['original']
         if self.permuting:
             text = self.permute_sentences(text)
         tokens = (
