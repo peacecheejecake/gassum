@@ -14,7 +14,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 
-from modeling_bart import MixoutBartForConditionalGeneration
+# from modeling_bart import MixoutBartForConditionalGeneration
 from dataset import KobartLabeledDataset, KobartEDADataset
 from criterion import LabelSmoothingRDropCriterion, LabelSmoothingCrossEntropyCriterion
 from lr_scheduler import (
@@ -139,8 +139,9 @@ def load_model(config, device=None):
         device = torch.device('cpu')
         
     if config.mixout:
-        bart_config = BartConfig.from_pretrained(config.plm_name)
-        model = MixoutBartForConditionalGeneration(bart_config)
+        raise NotImplementedError
+        # bart_config = BartConfig.from_pretrained(config.plm_name)
+        # model = MixoutBartForConditionalGeneration(bart_config)
     else:
         model = BartForConditionalGeneration.from_pretrained(config.plm_name)
     return model.to(device)
