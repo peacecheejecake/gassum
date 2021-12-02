@@ -214,10 +214,7 @@ def train_epoch(
         optimizer.zero_grad()
         loss.backward()
         nn.utils.clip_grad_norm_(criterion.model.parameters(), 2.0)
-        if config.xla:
-            raise NotImplementedError
-        else:
-            optimizer.step()
+        optimizer.step()
         lr_scheduler.step()
 
         epoch_loss += loss.item()
