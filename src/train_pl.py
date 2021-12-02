@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 
 import pytorch_lightning as pl
 
-from modeling_bart import MixoutBartForConditionalGeneration
+# from modeling_bart import MixoutBartForConditionalGeneration
 from model import BartForConditionalGenerationOnLightning
 from dataset import KobartDataset, KobartEDADataset, KobartEvalDataset
 from lr_scheduler import CosineDecayWithWarmup
@@ -90,8 +90,9 @@ eval_loader = DataLoader(
 )
 
 if args.mixout:
-    bart_config = BartConfig.from_pretrained(args.bart_name)
-    bart = MixoutBartForConditionalGeneration(bart_config)
+    raise NotImplementedError
+#     bart_config = BartConfig.from_pretrained(args.bart_name)
+#     bart = MixoutBartForConditionalGeneration(bart_config)
 else:
     bart = BartForConditionalGeneration.from_pretrained(args.bart_name)
 
