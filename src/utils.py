@@ -19,20 +19,6 @@ def set_manual_seed_all(seed):
     torch.backends.cudnn.benchmark = False
 
 
-# def empty_gdrive_trash():
-#     from pydrive.auth import GoogleAuth
-#     from pydrive.drive import GoogleDrive
-#     from google.colab import auth
-#     from oauth2client.client import GoogleCredentials
-
-#     auth.authenticate_user()
-#     gauth = GoogleAuth()
-#     gauth.credentials = GoogleCredentials.get_application_default()
-#     my_drive = GoogleDrive(gauth)
-#     for a_file in my_drive.ListFile({'q': "trashed = true"}).GetList():
-#         a_file.Delete()
-
-
 def read_data(data_path, ignore_nan=False):
     _, ext = os.path.splitext(data_path)
     if ext == '.csv':
