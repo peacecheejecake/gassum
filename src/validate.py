@@ -68,9 +68,11 @@ class RougeEvaluator:
         self.update_epoch_rouge(rouge, num_batches)
         
     def is_best_model(self, epoch_rouge):
-        epoch_rouge_sum = sum(epoch_rouge.values())
+        # epoch_rouge_sum = sum(epoch_rouge.values())
+        epoch_rouge_sum = epoch_rouge['rougeL']
         if self.config.save_best_sum:
-            is_best_model = epoch_rouge_sum > sum(self.history['rouge'].values())
+            # is_best_model = epoch_rouge_sum > sum(self.history['rouge'].values())
+            is_best_model = epoch_rouge_sum > self.history['rouge']['rougeL']
         else:
             better_counts = len(
                 e - h > 0 
@@ -118,7 +120,8 @@ class RougeEvaluator:
     def convert_to_best_rouge(cls, rouge_dict):
         return {
             **{f'best_{key}': rouge for key, rouge in rouge_dict.items()},
-            'best_rouge_sum': sum(rouge_dict.values()),
+            # 'best_rouge_sum': sum(rouge_dict.values()),
+            'best_rouge_sum': rouge_dict['rougeL'],
         }
 
 
