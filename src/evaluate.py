@@ -24,7 +24,7 @@ def evaluate(args, model, eval_loader):
         print(f"\r{(step + 1) / len(eval_loader) * 100}% ({str(datetime.now() - start_time)})", end="")
         model_gen = model.generate(
             **inputs,
-            num_beams=args.num_beams,
+            num_beams=args.beam_size,
             repetition_penalty=args.repetition_penalty,
             length_penalty=args.length_penalty,
             no_repeat_ngram_size=args.no_repeat_ngram_size,
