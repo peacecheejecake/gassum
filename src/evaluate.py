@@ -101,7 +101,7 @@ if __name__ == '__main__':
     })
     prefix = (
         f"{'-'.join(str(datetime.now()).split()).replace(':', '-')}"
-        f"_beam{args.num_beams}"
+        f"_beam{args.beam_size}"
         f"_len{args.max_length}"
         f"_{generate_random_name(3)}"
     )
