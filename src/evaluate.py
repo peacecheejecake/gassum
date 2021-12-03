@@ -41,10 +41,10 @@ def evaluate(args, model, eval_loader):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    # parser.add_argument('--base_dir')
-    # parser.add_argument('--plm_name')
-    # parser.add_argument('--model_name')
-    # parser.add_argument('--max_input_length', type=int, default=512)
+    parser.add_argument('--base_dir')
+    parser.add_argument('--plm_name')
+    parser.add_argument('--model_name')
+    parser.add_argument('--max_input_length', type=int, default=512)
     # parser.add_argument('--bos_at_front', action='store_true')
     # parser.add_argument('--batch_size', type=int)
     # parser.add_argument('--num_beams', type=int, default=6)
