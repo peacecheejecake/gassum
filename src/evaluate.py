@@ -1,5 +1,7 @@
 from datetime import datetime
 import argparse
+import json
+import os
 import pandas as pd
 
 from transformers import (
@@ -55,18 +57,31 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     device = torch.device('cuda:0') if torch.cuda.is_available() and not args.cpu else torch.device('cpu')
-    data_dir = f'{args.base_dir}/data'
-    model_dir = f'{args.base_dir}/models'
-    submission_dir = f'{args.base_dir}/submissions'
+    data_dir = os.path.join(args.base_dir, 'data')
+    model_dir = os.path.join(args.base_dir, 'models')
+    submission_dir = os.path.join(args.base_dir, 'submissions')
 
     tokenizer = AutoTokenizer.from_pretrained(args.plm_name)
 
-    test_data = pd.read_csv(f"{data_dir}/test_by_agenda_agg.csv")
-    eval_dataset = KobartEvalDataset(test_data, tokenizer, bos_at_front=args.bos_at_front)
-    eval_loader = DataLoader(
-        eval_dataset, 
+    with open(os.path.join(data_dir, 'test_summary.json')) as f:
+        test_json = json.load(f)
+    df_keys = [
+        'original', 'summary', 'passage_id', 
+        #'doc_name', 'category', 'author', 'publisher', 'publisher_year', 'doc_origin'
+    ]
+    test_dict = {key: [] for key in df_keys}
+    for sample in test_json:
+        for key in df_keys[:2]:
+            test_dict[key].append(sample[key])
+        for key in df_keys[2:]:
+            test_dict[key].append(sample['Meta'][key])
+    test_data = pd.DataFrame(data=test_dict)
+
+    dataset = KobartEvalDataset(test_data, tokenizer, bos_at_front=args.bos_at_front)
+    data_loader = DataLoader(
+        dataset, 
         batch_size=args.batch_size, 
-        collate_fn=lambda b: eval_dataset.collate(b, device),
+        collate_fn=lambda b: dataset.collate(b, device),
     )
 
     bart_config = BartConfig.from_pretrained(args.plm_name)
@@ -75,9 +90,9 @@ if __name__ == '__main__':
     best_model_path = f"{model_dir}/{args.model_name}.pth"
     model.load_state_dict(torch.load(best_model_path, map_location=device))
 
-    summaries = evaluate(args, model, eval_loader)
+    summaries = evaluate(args, model, data_loader)
     result = pd.DataFrame({
-        'uid': [f'id_{uid}' for uid in test_data['uid']],
+        'passage_id': list(test_data['passage_id']),
         'summary': summaries,
     })
     prefix = (

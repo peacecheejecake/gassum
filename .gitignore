@@ -206,3 +206,5 @@ cython_debug/
 ./notebooks
 ./assets
 ./data
+./models
+./checkpoints
