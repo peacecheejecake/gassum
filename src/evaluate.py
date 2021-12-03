@@ -78,7 +78,7 @@ if __name__ == '__main__':
     # test_data = pd.DataFrame(data=test_dict)
 
     test_data = pd.read_json(os.path.join(data_dir, 'test_summary.json'))
-    dataset = KobartEvalDataset(test_data, tokenizer, bos_at_front=args.bos_at_front)
+    dataset = KobartEvalDataset(args, test_data, tokenizer)
     data_loader = DataLoader(
         dataset, 
         batch_size=args.batch_size, 
