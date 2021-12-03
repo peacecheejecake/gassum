@@ -29,7 +29,7 @@ def evaluate(args, model, eval_loader):
             length_penalty=args.length_penalty,
             no_repeat_ngram_size=args.no_repeat_ngram_size,
             early_stopping=args.early_stopping,
-            max_length=args.max_length,
+            max_length=args.max_gen_length,
         )
         gen_sequences = [
             _postprocess(gen, tokenizer) for gen in tokenizer.batch_decode(model_gen[:, 1:])
