@@ -13,7 +13,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from dataset import KobartEvalDataset
-from utils import _postprocess, generate_random_name
+from utils import _postprocess, add_arguments_for_config, add_arguments_for_generation, add_arguments_for_training, generate_random_name
 
 
 def evaluate(args, model, eval_loader):
@@ -41,19 +41,22 @@ def evaluate(args, model, eval_loader):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--base_dir')
-    parser.add_argument('--plm_name')
-    parser.add_argument('--model_name')
-    parser.add_argument('--max_input_length', type=int, default=512)
-    parser.add_argument('--bos_at_front', action='store_true')
-    parser.add_argument('--batch_size', type=int)
-    parser.add_argument('--num_beams', type=int, default=6)
-    parser.add_argument('--repetition_penalty', type=float, default=2.5)
-    parser.add_argument('--length_penalty', type=float, default=1.0)
-    parser.add_argument('--no_repeat_ngram_size', type=int, default=2)
-    parser.add_argument('--early_stopping', action='store_true')
-    parser.add_argument('--max_gen_length', type=int, default=512)
-    parser.add_argument('--cpu', action='store_true')
+    # parser.add_argument('--base_dir')
+    # parser.add_argument('--plm_name')
+    # parser.add_argument('--model_name')
+    # parser.add_argument('--max_input_length', type=int, default=512)
+    # parser.add_argument('--bos_at_front', action='store_true')
+    # parser.add_argument('--batch_size', type=int)
+    # parser.add_argument('--num_beams', type=int, default=6)
+    # parser.add_argument('--repetition_penalty', type=float, default=2.5)
+    # parser.add_argument('--length_penalty', type=float, default=1.0)
+    # parser.add_argument('--no_repeat_ngram_size', type=int, default=2)
+    # parser.add_argument('--early_stopping', action='store_true')
+    # parser.add_argument('--max_gen_length', type=int, default=512)
+    # parser.add_argument('--cpu', action='store_true')
+    add_arguments_for_config(parser)
+    add_arguments_for_generation(parser)
+    add_arguments_for_training(parser)
     args = parser.parse_args()
 
     device = torch.device('cuda:0') if torch.cuda.is_available() and not args.cpu else torch.device('cpu')
