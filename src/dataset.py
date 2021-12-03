@@ -261,7 +261,7 @@ class KobartEvalDataset(_DatasetBase):
         super().__init__(
             config=config,
             data=data, 
-            tokenize=tokenizer, 
+            tokenizer=tokenizer, 
             for_train=False,
             labeled=False,
         )
