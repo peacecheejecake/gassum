@@ -252,15 +252,18 @@ class KobartLabeledDataset(_DatasetBase):
 
 class KobartEvalDataset(_DatasetBase):
 
-    def __init__(self, data, tokenizer, max_length=512, bos_at_front=False):
+    def __init__(
+        self, 
+        config,
+        data, 
+        tokenizer, 
+    ):
         super().__init__(
+            config=config,
             data=data, 
-            tokenizer=tokenizer, 
+            tokenize=tokenizer, 
             for_train=False,
             labeled=False,
-            max_length=max_length,
-            teacher_forcing_ratio=0.0,
-            bos_at_front=bos_at_front,
         )
 
     def __getitem__(self, idx):
