@@ -1,3 +1,4 @@
+import json
 import os
 import re
 from string import ascii_lowercase, digits
@@ -37,6 +38,20 @@ def read_data(data_path, ignore_nan=False):
                     data[key].map(lambda x: not isinstance(x, float))
                 ] # remove rows containing missing values
     return data
+
+
+def load_data_from_json(file_path):
+    with open(file_path) as f:
+        json_raw = json.load(f)['documents']
+    table = {key: [] for key in json_raw[0]}
+    for sample in json_raw:
+        for key in table:
+            table[key].append(
+                ' '.join(s['sentence'] for s in sample['text'])
+                if key == 'text'
+                else sample[key]
+            )
+    return pd.DataFrame(table, index=table['id'])
 
 
 def split_train_valid(data, valid_ratio, shuffle=False):

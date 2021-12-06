@@ -1,13 +1,14 @@
 import argparse
 import logging
 import random
+import os
 
 import torch
 from torch.utils.data import DataLoader
 from transformers import BartForConditionalGeneration, AutoTokenizer
 from datasets import load_metric
 
-from utils import _postprocess, set_manual_seed_all, prepare_train_data
+from utils import _postprocess, set_manual_seed_all, load_data_from_json
 from dataset import KobartLabeledDataset
 
 
@@ -203,12 +204,10 @@ if __name__ == '__main__':
     tokenizer = AutoTokenizer.from_pretrained(args.plm_name)
     setattr(tokenizer, 'decoder_start_token_id', model.config.decoder_start_token_id)
 
-    _, valid_data = prepare_train_data(
-        f"{data_dir}/train_by_agenda_agg.csv", 
-        args.valid_ratio, 
-        random_split=True,
+    valid_data = load_data_from_json(os.path.join(data_dir, 'valid_original.json'))
+    valid_dataset = KobartLabeledDataset(
+        valid_data, tokenizer, for_train=False, bos_at_front=args.bos_at_front
     )
-    valid_dataset = KobartLabeledDataset(valid_data, tokenizer, for_train=False, bos_at_front=args.bos_at_front)
     valid_loader = DataLoader(
         valid_dataset, 
         batch_size=args.valid_batch_size, 
