@@ -44,7 +44,7 @@ def load_data_from_json(file_path):
     with open(file_path) as f:
         json_raw = json.load(f)['documents']
     keys = [
-        'id', 'title', 'text', 'summary', 'publish_date'
+        'id', 'title', 'text', 'summary', 'publish_date',
         'size', 'char_count',
         'category', 'media_type', 'media_sub_type', 'media_name',
     ]
