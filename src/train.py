@@ -28,7 +28,7 @@ from utils import (
     add_arguments_for_lr_scheduler,
     add_arguments_for_training,
     add_arguments_for_config,
-    prepare_train_data,
+    load_data_from_json,
     sync_batch_idx,
     generate_random_name, 
     print_train_info,
@@ -249,11 +249,8 @@ def train(config):
     tokenizer = AutoTokenizer.from_pretrained(config.plm_name)
     setattr(tokenizer, 'decoder_start_token_id', model.config.decoder_start_token_id)
 
-    train_data, valid_data = prepare_train_data(
-        f"{config.data_dir}/{config.data_file}", 
-        config.valid_ratio, 
-        random_split=True,
-    )
+    train_data = load_data_from_json(os.path.join(config.data_dir, 'train_original.json'))
+    valid_data = load_data_from_json(os.path.join(config.data_dir, 'valid_original.json'))
     train_loader, valid_loader = prepare_data_loaders(
         config,
         train_data, 
