@@ -77,20 +77,6 @@ if __name__ == '__main__':
 
     tokenizer = AutoTokenizer.from_pretrained(args.plm_name)
 
-    # with open(os.path.join(data_dir, 'test_summary.json')) as f:
-    #     test_json = json.load(f)
-    # df_keys = [
-    #     'original', 'summary', 'passage_id', 
-    #     #'doc_name', 'category', 'author', 'publisher', 'publisher_year', 'doc_origin'
-    # ]
-    # test_dict = {key: [] for key in df_keys}
-    # for sample in test_json:
-    #     for key in df_keys[:2]:
-    #         test_dict[key].append(sample[key])
-    #     for key in df_keys[2:]:
-    #         test_dict[key].append(sample['Meta'][key])
-    # test_data = pd.DataFrame(data=test_dict)
-
     test_data = load_eval_data_from_jsonl(os.path.join(data_dir, 'new_test.jsonl'))
     dataset = KobartEvalDataset(args, test_data, tokenizer)
     data_loader = DataLoader(
@@ -107,7 +93,7 @@ if __name__ == '__main__':
 
     summaries = evaluate(args, model, data_loader)
     result = pd.DataFrame({
-        'Meta': list(test_data['Meta']),
+        'id': list(test_data['id']),
         'summary': summaries,
     })
     prefix = (
