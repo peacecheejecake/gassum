@@ -385,7 +385,6 @@ def train(config):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--base_dir', required=True)
-    parser.add_argument('--data_file', default='train_by_agenda_agg.csv')
     parser.add_argument('--exp_name')
     parser.add_argument('--tapt')
     parser.add_argument('--checkpoint')

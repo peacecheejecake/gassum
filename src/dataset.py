@@ -113,7 +113,7 @@ class _DatasetBase(Dataset):
                 if isinstance(_label, str):
                     _label = self.tokenizer.tokenize(_label)
                 _label_ids = self.tokenizer.convert_tokens_to_ids(_label[:max_label_length - 1])
-                if _label_ids and _label_ids[-1] != self.eos_token_id:
+                if _label_ids[-1] != self.eos_token_id:
                     _label_ids.append(self.eos_token_id)                    
                 _label_ids = self.pad(_label_ids, self.ignore_id, max_label_length)
                 label_ids.append(_label_ids)
