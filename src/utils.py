@@ -46,11 +46,13 @@ def load_data_from_json(file_path):
     table = {key: [] for key in json_raw[0]}
     for sample in json_raw:
         for key in table:
-            table[key].append(
-                ' '.join(s['sentence'] for s in sample['text'])
-                if key == 'text'
-                else sample[key]
-            )
+            if key == 'text':
+                chunks = []
+                for bind in sample['text']:
+                    chunks.append(' '.join(s['sentence'] for s in bind))
+                table[key].append(' '.join(chunks))
+            else:
+                table[key].append(sample[key])
     return pd.DataFrame(table, index=table['id'])
 
 
