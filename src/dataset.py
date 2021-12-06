@@ -112,7 +112,6 @@ class _DatasetBase(Dataset):
             for _input_ids, _label in zip(input_ids, labels):
                 if isinstance(_label, str):
                     _label = self.tokenizer.tokenize(_label)
-                print(_label)
                 _label_ids = self.tokenizer.convert_tokens_to_ids(_label[:max_label_length - 1])
                 if _label_ids and _label_ids[-1] != self.eos_token_id:
                     _label_ids.append(self.eos_token_id)                    
