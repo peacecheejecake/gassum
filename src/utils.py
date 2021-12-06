@@ -295,7 +295,7 @@ def add_arguments_for_training(parser):
         default=1, 
         help='k for cross validation. If `num_folds` > 1, `valid_ratio` is ignored.',
     )
-    parser.add_argument('--valid_ratio', type=float, default=0.2)
+    # parser.add_argument('--valid_ratio', type=float, default=0.2)
     parser.add_argument('--warmup_epochs', type=int, default=0)
     parser.add_argument('--num_epochs', type=int, default=50)
     parser.add_argument('--lr', type=float, default=5e-5)
