@@ -134,12 +134,12 @@ class RougeEvaluator:
 
 
 def validate_epoch(config, model, dataloader, evaluator=None, epoch=None, wandb_text_table=None, quiet=False, device=None):
+    if evaluator is None:
+        evaluator = RougeEvaluator(config)
+
     tokenizer = dataloader.dataset.tokenizer
     epoch = epoch if epoch is not None else evaluator.epoch
     random_step = random.randint(1, len(dataloader) - 1)
-
-    if evaluator is None:
-        evaluator = RougeEvaluator(config)
 
     if device is not None:
         model.to(device)
