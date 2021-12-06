@@ -43,14 +43,21 @@ def read_data(data_path, ignore_nan=False):
 def load_data_from_json(file_path):
     with open(file_path) as f:
         json_raw = json.load(f)['documents']
-    table = {key: [] for key in json_raw[0]}
+    keys = [
+        'id', 'title', 'text', 'summary', 'publish_date'
+        'size', 'char_count',
+        'category', 'media_type', 'media_sub_type', 'media_name',
+    ]
+    table = {key: [] for key in keys}
     for sample in json_raw:
-        for key in table:
+        for key in keys:
             if key == 'text':
                 chunks = []
                 for bind in sample['text']:
                     chunks.append(' '.join(s['sentence'] for s in bind))
                 table[key].append(' '.join(chunks))
+            elif key == 'summary':
+                table[key].append(' '.join(sample['abstractive']))
             else:
                 table[key].append(sample[key])
     return pd.DataFrame(table, index=table['id'])
@@ -310,7 +317,6 @@ def add_arguments_for_training(parser):
 
 def add_arguments_for_config(parser):
     parser.add_argument('--seed', type=int, default=42)
-    # parser.add_argument('--xla', action='store_true')
     parser.add_argument('--cpu', action='store_true')
     parser.add_argument('--wandb', action='store_true')
     parser.add_argument('--save_best_sum', action='store_true')
