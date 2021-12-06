@@ -205,9 +205,7 @@ if __name__ == '__main__':
     setattr(tokenizer, 'decoder_start_token_id', model.config.decoder_start_token_id)
 
     valid_data = load_data_from_json(os.path.join(data_dir, 'valid_original.json'))
-    valid_dataset = KobartLabeledDataset(
-        valid_data, tokenizer, for_train=False, bos_at_front=args.bos_at_front
-    )
+    valid_dataset = KobartLabeledDataset(args, valid_data, tokenizer, for_train=False)
     valid_loader = DataLoader(
         valid_dataset, 
         batch_size=args.valid_batch_size, 
