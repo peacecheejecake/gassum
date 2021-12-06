@@ -13,7 +13,13 @@ import torch
 from torch.utils.data import DataLoader
 
 from dataset import KobartEvalDataset
-from utils import _postprocess, add_arguments_for_config, add_arguments_for_generation, add_arguments_for_training, generate_random_name
+from utils import (
+    _postprocess, 
+    add_arguments_for_config, 
+    add_arguments_for_generation, 
+    add_arguments_for_training, 
+    generate_random_name,
+)
 
 
 def evaluate(args, model, eval_loader):

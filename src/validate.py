@@ -8,7 +8,14 @@ from torch.utils.data import DataLoader
 from transformers import BartForConditionalGeneration, AutoTokenizer
 from datasets import load_metric
 
-from utils import _postprocess, set_manual_seed_all, load_data_from_json
+from utils import (
+    _postprocess, 
+    set_manual_seed_all, 
+    load_data_from_json, 
+    add_arguments_for_config, 
+    add_arguments_for_generation, 
+    add_arguments_for_training,
+)
 from dataset import KobartLabeledDataset
 
 
@@ -183,6 +190,9 @@ if __name__ == '__main__':
     parser.add_argument('--max_gen_length', type=int, default=512)
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--cpu', action='store_true')
+    add_arguments_for_config(parser)
+    add_arguments_for_generation(parser)
+    add_arguments_for_training(parser)
     args = parser.parse_args()
 
     logging.info(args)
