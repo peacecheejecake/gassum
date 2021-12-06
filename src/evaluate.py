@@ -1,6 +1,6 @@
 from datetime import datetime
 import argparse
-import json
+import jsonlines
 import os
 import pandas as pd
 
@@ -37,6 +37,17 @@ def evaluate(args, model, eval_loader):
         summaries.extend(gen_sequences)
     print()
     return summaries
+
+
+def load_eval_data_from_jsonl(path):
+    table = {'id': [], 'article': [], 'media': []}
+    with open(path) as f:
+        with jsonlines.Reader(f) as reader:
+            for obj in reader.iter():
+                table['id'].append(obj['id'])
+                table['article'].append(' '.join(obj['article_original']))
+                table['media'].append(obj['media'])
+    return pd.DataFrame(data=table)
 
 
 if __name__ == '__main__':
@@ -80,7 +91,7 @@ if __name__ == '__main__':
     #         test_dict[key].append(sample['Meta'][key])
     # test_data = pd.DataFrame(data=test_dict)
 
-    test_data = pd.read_json(os.path.join(data_dir, 'test_summary.json'))
+    test_data = load_eval_data_from_jsonl(os.path.join(data_dir, 'new_test.jsonl'))
     dataset = KobartEvalDataset(args, test_data, tokenizer)
     data_loader = DataLoader(
         dataset, 
