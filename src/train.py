@@ -287,16 +287,16 @@ def train(config):
     for epoch in range(evaluator.start_epoch, config.num_epochs):
         if evaluator.end_of_patience():
             break
-        if epoch > 1:
-            epoch_loss = train_epoch(
-                config=config,
-                dataloader=train_loader, 
-                criterion=criterion, 
-                optimizer=optimizer,
-                lr_scheduler=lr_scheduler,
-                epoch=epoch,
-                quiet=False,
-            )
+        
+        epoch_loss = train_epoch(
+            config=config,
+            dataloader=train_loader, 
+            criterion=criterion, 
+            optimizer=optimizer,
+            lr_scheduler=lr_scheduler,
+            epoch=epoch,
+            quiet=False,
+        )
         epoch_rouge = validate_epoch(
             config=config,
             model=model,
