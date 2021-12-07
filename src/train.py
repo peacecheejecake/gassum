@@ -302,7 +302,7 @@ def train(config):
             model=model,
             dataloader=valid_loader,
             evaluator=evaluator,
-            wandb_text_table=wandb_text_table if config.wandb is not None else None,
+            wandb_text_table=wandb_text_table if config.wandb else None,
             epoch=epoch,
             quiet=config.quiet,
         )
