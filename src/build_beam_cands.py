@@ -24,7 +24,7 @@ from utils import (
 
 def build_candidates(config, data, device):
     bart = BartForConditionalGeneration(BartConfig.from_pretrained('hyunwoongko/kobart'))
-    bart_finetuned = torch.load(os.path.join(config.bart_path, map_location='cpu'))
+    bart_finetuned = torch.load(config.bart_path, map_location='cpu')
     bart.load_state_dict(bart_finetuned)
     bart = bart.to(device)
 
