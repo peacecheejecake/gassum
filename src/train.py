@@ -21,6 +21,7 @@ from lr_scheduler import (
     ConstantLRScheduler,
     CosineDecayLRScheduler, 
     CosineAnnealingRestartLRScheduler, 
+    SimpleLRScheduler,
 )
 from utils import (
     set_manual_seed_all, 
@@ -111,6 +112,12 @@ def init_lr_scheduler(config, optimizer, num_batches):
             lr=config.lr,
             warmup_steps=num_batches * config.warmup_epochs,
             warmup_start_lr=config.warmup_start_lr,
+        )
+    elif config.lr_scheduler == 'simple':
+        lr_scheduler = SimpleLRScheduler(
+            optimizer=optimizer,
+            lr=config.lr,
+            warmup_steps=num_batches * config.warmup_epochs,
         )
     return lr_scheduler
 

@@ -182,3 +182,15 @@ class CosineAnnealingRestartLRScheduler(LRSchedulerBase):
         else:
             raise ValueError('max_decay_mode must be either "cos" or "exp".')
         return decay * self.max_lr
+
+
+class SimpleLRScheduler(LRSchedulerBase):
+
+    def __init__(self, optimizer, lr, warmup_steps):
+        self.warmup_steps = warmup_steps
+
+        super().__init__(optimizer, lr)
+        
+    def get_lr(self, step=None):
+        return self.max_lr * min(step ** -0.5, step * self.warmup_steps ** -1.5)
+        
