@@ -60,12 +60,8 @@ def build_candidates(config, data, device):
         # references = [
         #     _postprocess(ref, tokenizer) for ref in inputs['labels']
         # ]
-        predictions = [
-            gen for gen in tokenizer.batch_decode(model_gen[:, 1:])
-        ]
-        references = [
-            ref for ref in inputs['labels']
-        ]
+        predictions = tokenizer.batch_decode(model_gen[:, 1:])
+        references = inputs['labels']
 
         for i, ref in enumerate(references):
             _candidates = predictions[i * config.num_cands: (i + 1) * config.num_cands]
@@ -78,7 +74,7 @@ def build_candidates(config, data, device):
                 for cand in _candidates
             ]
             candidates.append([c for _, c in sorted(zip(rouge_scores, _candidates), reverse=True)])
-    
+            print(len(candidates))
     data['candidates'] = candidates
     return data
 
