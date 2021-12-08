@@ -72,8 +72,6 @@ def build_candidates(config, data, device):
                 for cand in _candidates
             ]
             candidates.append([c for _, c in sorted(zip(rouge_scores, _candidates), reverse=True)])
-            print(len(candidates), len(candidates[0]))
-            
     
     data['candidates'] = candidates
     return data
