@@ -6,7 +6,8 @@ import os
 import torch
 from torch.utils.data import DataLoader
 from transformers import BartForConditionalGeneration, AutoTokenizer
-from datasets import load_metric
+
+from rouge import Rouge
 
 from utils import (
     _postprocess, 
@@ -21,7 +22,7 @@ from dataset import KobartLabeledDataset
 
 class RougeEvaluator:
 
-    rouge = load_metric('rouge')
+    rouge = Rouge()
 
     def __init__(self, config):
         self.config = config
@@ -64,16 +65,18 @@ class RougeEvaluator:
         self.epoch = self.start_epoch
     
     @classmethod
-    def compute_rouge(cls, summaries, references):
-        return cls.rouge.compute(predictions=summaries, references=references)
+    def compute_rouge(cls, predictions, references):
+        # return cls.rouge.compute(predictions=summaries, references=references)
+        return cls.rouge.get_scores(predictions, references, avg=True)
 
-    def update_epoch_rouge(self, rouge_dict, num_batches):
+    def update_epoch_rouge_batch(self, rouge_dict, num_batches):
         for key in self.epoch_rouge:
-            self.epoch_rouge[key] += rouge_dict[key].mid.fmeasure / num_batches
+            # self.epoch_rouge[key] += rouge_dict[key].mid.fmeasure / num_batches
+            self.epoch_rouge[key] += rouge_dict[key]['f'] / num_batches
     
     def compute_collect_rouge(self, summaries, references, num_batches):
         score = RougeEvaluator.compute_rouge(summaries, references)
-        self.update_epoch_rouge(score, num_batches)
+        self.update_epoch_rouge_batch(score, num_batches)
         
     def is_best_model(self, epoch_rouge):
         epoch_rouge_sum = sum(epoch_rouge.values())
@@ -115,14 +118,14 @@ class RougeEvaluator:
     def _history_base(cls):
         return {
             'epoch': 0, 
-            'rouge': {'rouge1': 0, 'rouge2': 0, 'rougeL': 0}, 
+            'rouge': {'rouge-1': 0, 'rouge-2': 0, 'rouge-l': 0}, 
             'patience_count': 0,
             'best_rouge_sums': [],
         }
 
     @classmethod
     def _epoch_rouge_base(cls):
-        return {'rouge1': 0, 'rouge2': 0, 'rougeL': 0}
+        return {'rouge-1': 0, 'rouge-2': 0, 'rouge-l': 0}
     
     @classmethod
     def convert_to_best_rouge(cls, rouge_dict):

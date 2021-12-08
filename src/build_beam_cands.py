@@ -1,7 +1,7 @@
 import argparse
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, strptime
 
 import pandas as pd
 
@@ -40,11 +40,23 @@ def build_candidates(config, data, device):
         collate_fn=lambda b: dataset.collate(b, device),
     )
 
+    def sec_to_str(second):
+        minute, second = divmod(int(second), 60)
+        hour, minute = divmod(minute, 60)
+        return f"{hour:02d}:{minute:02d}:{second:02d}"
+
     candidates = []
     bart.eval()
     start_time = datetime.now()
     for step, inputs in enumerate(dataloader):
-        print(f"\r{(step + 1) / len(dataloader) * 100:.02f}% ({str(datetime.now() - start_time)})", end="")
+        progress_ratio = (step + 1) / len(dataloader)
+        elapsed_seconds = (datetime.now() - start_time).total_seconds()
+        left_seconds = (1 - progress_ratio) / progress_ratio * elapsed_seconds
+        print(
+            f"\r{progress_ratio * 100:.02f}%",
+            f"({sec_to_str(elapsed_seconds)}|{sec_to_str(left_seconds)})", 
+            end=""
+        )
         model_gen = bart.generate(
             **inputs['model_inputs'],
             num_beams=config.beam_size,
