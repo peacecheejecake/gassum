@@ -365,7 +365,7 @@ class DatasetForReranker(Dataset):
 
     def __getitem__(self, idx):
         row = self.data.iloc[idx]
-        input_dict = {'document': preprocess(row['text']), 'candidates': row['candidates']}
+        input_dict = {'document': preprocess(row['text']), 'candidates': eval(row['candidates'])}
         if self.require_golds:
             input_dict['summary'] = row['summary']
         return input_dict
