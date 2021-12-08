@@ -69,7 +69,7 @@ def build_candidates(config, data, device):
                 in rouge.compute(
                     predictions=_candidates,
                     references=[ref] * config.num_cands,
-                )
+                ).values()
             ]
             print(rouge_scores)
             candidates.append([c for _, c in sorted(zip(rouge_scores, _candidates), reverse=True)])
