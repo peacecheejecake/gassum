@@ -1,7 +1,7 @@
 import argparse
 import logging
 import os
-import datetime
+from datetime import datetime
 
 import pandas as pd
 
@@ -74,15 +74,12 @@ def build_candidates(config, data, device):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--base_dir', required=True)
+    parser.add_argument('--bart_path', required=True)
     parser.add_argument('--bart_name', default='hyunwoongko/kobart')
-    # parser.add_argument('--sum_batch_size', type=int)
-    parser.add_argument('--bart_path', default='hyunwoongko/kobart')
-    # parser.add_argument('--checkpoint')
     parser.add_argument('--max_input_length', type=int, default=512)
     
     add_arguments_for_training(parser)
     add_arguments_for_generation(parser)
-    # add_arguments_for_lr_scheduler(parser)
     add_arguments_for_config(parser)
 
     args = parser.parse_args()
