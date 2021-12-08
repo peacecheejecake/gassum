@@ -354,37 +354,48 @@ class DatasetForReranker(Dataset):
         self,
         config,
         data,
-        summarizer,
         tokenizer,
         *,
-        labeled=False,
-        gen_config=None,
+        require_golds=False,
     ):
         self.config = config
         self.data = data
         self.tokenizer = tokenizer
-        self.labeled = labeled
+        self.require_golds = require_golds
 
-        default_gen_config = {
-            'max_length': 512,
-            'num_beams': 16,
-            'no_repeat_ngram_size': 2,
-            'num_return_sequences': 16,
-            'early_stopping': True,
+    def __getitem__(self, idx):
+        row = self.data.iloc[idx]
+        input_dict = {'document': preprocess(row['text']), 'candidates': row['candidate']}
+        if self.require_golds:
+            input_dict['summary'] = row['summary']
+        return input_dict
+    
+    def __len__(self):
+        return len(self.data)
+
+    def collate(self, batch, device=None):
+        if device is None:
+            device = self.config.device
+
+        docs, cands = [], []
+        if self.require_golds:
+            golds = []
+        for sample in batch:
+            docs.append(sample['document'])
+            cands.extend(sample['candidates'])
+            if self.require_golds:
+                golds.append(sample['summary'])
+        
+        tokenizer_configs = {
+            'padding': 'longest',
+            'truncation': True,
+            'max_length': self.config.max_input_length,
+            'return_tensors': 'pt',
         }
-        if gen_config is not None and not isinstance(gen_config, dict):
-            raise TypeError
-        elif gen_config is None:
-            self.gen_config = default_gen_config
-        else:
-            for key in default_gen_config:
-                if gen_config.get(key) is None:
-                    gen_config[key] = default_gen_config[key]
-            self.gen_config = gen_config
-
-        self.num_cands = self.gen_config['num_return_sequences']
-
-    def build_candidates(data, summairzer, bart_name='hyunwoongko/kobart'):
-        tokenizer = AutoTokenizer.from_pretrained(bart_name)
-        candidates = []
-        summarizer.generate()
+        docs = {key: val.to(device) for key, val in self.tokenizer(docs, **tokenizer_configs)}
+        cands = {key: val.to(device) for key, val in self.tokenizer(cands, **tokenizer_configs)}
+        inputs = (docs, cands)
+        if self.require_golds:
+            golds = {key: val.to(device) for key, val in self.tokenizer(golds, **tokenizer_configs)}
+            inputs += (golds,)
+        return inputs

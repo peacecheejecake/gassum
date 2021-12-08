@@ -20,6 +20,7 @@ from utils import (
     add_arguments_for_config,
     set_manual_seed_all,
     _postprocess,
+    print_simple_progress,
 )
 
 
@@ -40,23 +41,11 @@ def build_candidates(config, data, device):
         collate_fn=lambda b: dataset.collate(b, device),
     )
 
-    def sec_to_str(second):
-        minute, second = divmod(int(second), 60)
-        hour, minute = divmod(minute, 60)
-        return f"{hour:02d}:{minute:02d}:{second:02d}"
-
     candidates = []
     bart.eval()
     start_time = datetime.now()
     for step, inputs in enumerate(dataloader):
-        progress_ratio = (step + 1) / len(dataloader)
-        elapsed_seconds = (datetime.now() - start_time).total_seconds()
-        left_seconds = (1 - progress_ratio) / progress_ratio * elapsed_seconds
-        print(
-            f"\r{progress_ratio * 100:.02f}%",
-            f"({sec_to_str(elapsed_seconds)}|{sec_to_str(left_seconds)})", 
-            end=""
-        )
+        print_simple_progress(step, total_steps=len(dataloader), start_time=start_time)
         model_gen = bart.generate(
             **inputs['model_inputs'],
             num_beams=config.beam_size,
@@ -83,19 +72,7 @@ def build_candidates(config, data, device):
             ]
             candidates.append([c for _, c in sorted(zip(scores, _candidates), reverse=True)])
         print(len(candidates))
-        # for i, _reference in enumerate(references):
-        #     _candidates = predictions[i * config.num_cands: (i + 1) * config.num_cands]
-        #     rouge.compute(predictions=_candidates, references=[_references]).values()
-        #     rouge_scores = [
-        #         sum(
-        #             val.mid.fmeasure 
-        #             for val 
-        #             in rouge.compute(predictions=[cand], references=[ref]).values()
-        #         )
-        #         for cand in _candidates
-        #     ]
-        #     candidates.append([c for _, c in sorted(zip(rouge_scores, _candidates), reverse=True)])
-        #     print(len(candidates))
+        
     data['candidates'] = candidates
     return data
 

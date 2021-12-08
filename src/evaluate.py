@@ -19,6 +19,7 @@ from utils import (
     add_arguments_for_generation, 
     add_arguments_for_training, 
     generate_random_name,
+    print_simple_progress,
 )
 
 
@@ -27,7 +28,7 @@ def evaluate(args, model, eval_loader):
     summaries = []
     model.eval()
     for step, inputs in enumerate(eval_loader):
-        print(f"\r{(step + 1) / len(eval_loader) * 100:.02f}% ({str(datetime.now() - start_time)})", end="")
+        print_simple_progress(step, total_steps=len(eval_loader), start_time=start_time)
         model_gen = model.generate(
             **inputs,
             num_beams=args.beam_size,

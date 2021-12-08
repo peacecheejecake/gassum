@@ -2,6 +2,7 @@ import json
 import os
 import re
 from string import ascii_lowercase, digits
+from datetime import datetime
 import random
 import numpy as np
 import pandas as pd
@@ -254,11 +255,28 @@ def print_best_model(history, final_model_path=None):
     print(f"Best Model")
     print(f"- Epoch: {history['epoch']}")
     rouges = history['rouge']
-    print(f"- Rouge-1: {rouges['rouge1']}")
-    print(f"- Rouge-2: {rouges['rouge2']}")
-    print(f"- Rouge-L: {rouges['rougeL']}")
+    print(f"- Rouge-1: {rouges['rouge-1']}")
+    print(f"- Rouge-2: {rouges['rouge-2']}")
+    print(f"- Rouge-L: {rouges['rouge-l']}")
     if final_model_path is not None:
         print(f"- Path: {final_model_path}")
+
+
+def sec_to_str(second):
+    minute, second = divmod(int(second), 60)
+    hour, minute = divmod(minute, 60)
+    return f"{hour:02d}:{minute:02d}:{second:02d}"
+    
+
+def print_simple_progress(step, total_steps, start_time):
+    progress_ratio = (step + 1) / total_steps
+    seconds_elapsed = (datetime.now() - start_time).total_seconds()
+    seconds_left = (1 - progress_ratio) / progress_ratio * seconds_elapsed
+    print(
+        f"\r{progress_ratio * 100:.02f}%",
+        f"({sec_to_str(seconds_elapsed)}|{sec_to_str(seconds_left)})", 
+        end=""
+    )
 
 
 def add_arguments_for_generation(parser):
@@ -300,6 +318,7 @@ def add_arguments_for_training(parser):
     parser.add_argument('--num_epochs', type=int, default=50)
     parser.add_argument('--lr', type=float, default=5e-5)
     parser.add_argument('--weight_decay', type=float, default=0.01)
+    parser.add_argument('--max_grad_norm', type=float, default=2.0)
     parser.add_argument('--patience', type=int)
     parser.add_argument('--bos_at_front', action='store_true')
     parser.add_argument('--train_batch_size', type=int, default=8)
@@ -313,6 +332,7 @@ def add_arguments_for_training(parser):
     parser.add_argument('--rdrop', action='store_true')
     parser.add_argument('--eda', action='store_true')
     parser.add_argument('--swa_start', type=int)
+    parser.add_argument('--max_input_length', type=int, default=512)
 
 
 def add_arguments_for_config(parser):
