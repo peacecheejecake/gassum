@@ -67,7 +67,7 @@ def build_candidates(config, data, device):
             scores = [
                 sum(value['f'] for value in score.values())
                 for score
-                in rouge.get_scores(predictions, references) # avg=False
+                in rouge.get_scores(predictions, _references) # avg=False
             ]
             candidates.append([c for _, c in sorted(zip(scores, _candidates), reverse=True)])
             print(len(candidates))
