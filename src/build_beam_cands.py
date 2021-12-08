@@ -54,7 +54,7 @@ def build_candidates(config, data, device):
             max_length=config.max_gen_length,
         )
         
-        summaries = [
+        predictions = [
             _postprocess(gen, tokenizer) for gen in tokenizer.batch_decode(model_gen[:, 1:])
         ]
         references = [
@@ -62,10 +62,10 @@ def build_candidates(config, data, device):
         ]
         rouge_scores = [
             val.high.fmeasure
-            for val in rouge.compute(predictions=summaries, references=references)
+            for val in rouge.compute(predictions=predictions, references=references * len(predictions))
         ]
         print(rouge_scores)
-        candidates.append([s for _, s in sorted(zip(rouge_scores, summaries), reverse=True)])
+        candidates.append([p for _, p in sorted(zip(rouge_scores, predictions), reverse=True)])
     
     data['candidates'] = candidates
     return data
