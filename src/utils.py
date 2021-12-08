@@ -327,8 +327,9 @@ def add_arguments_for_config(parser):
 
 def load_checkpoint(config, model, optimizer, lr_scheduler, evaluator):
     if config.checkpoint is not None:
-        checkpoint_dir = f"{config.base_dir}/checkpoints"
-        checkpoint_path = f"{checkpoint_dir}/{config.checkpoint}.pth"
+        # checkpoint_dir = f"{config.base_dir}/checkpoints"
+        # checkpoint_path = f"{checkpoint_dir}/{config.checkpoint}.pth"
+        checkpoint_path = config.checkpoint
         if os.path.exists(checkpoint_path):
             checkpoint = torch.load(checkpoint_path)
             if checkpoint.get('model') is not None:
