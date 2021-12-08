@@ -148,4 +148,11 @@ class LabelSmoothingCrossEntropyCriterion(_CriterionBase):
 
 class SimCLSCriterion(_CriterionBase):
 
-    pass
+    def __init__(
+        self,
+        model, 
+        label_smoothing=0.0,
+        ignore_index=-100, 
+        reduction='sum', 
+    ):
+        pass

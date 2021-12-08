@@ -190,6 +190,33 @@ def prepare_data_loaders(config, train_data, valid_data, tokenizer, device=None)
     return train_loader, valid_loader
 
 
+def configure():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--base_dir', required=True)
+    parser.add_argument('--exp_name')
+    parser.add_argument('--tapt')
+    parser.add_argument('--checkpoint')
+    parser.add_argument('--plm_name', default='hyunwoongko/kobart')
+    parser.add_argument('--max_input_length', type=int, default=512)
+    
+    add_arguments_for_training(parser)
+    add_arguments_for_generation(parser)
+    add_arguments_for_lr_scheduler(parser)
+    add_arguments_for_config(parser)
+
+    args = parser.parse_args()
+    logging.info(args)
+
+    args.data_dir = f"{args.base_dir}/data"
+    args.asset_dir = f"{args.base_dir}/assets"
+    args.model_dir = f"{args.base_dir}/models"
+    args.checkpoint_dir = f"{args.base_dir}/checkpoints"
+    args.exp_name = args.exp_name if args.exp_name is not None else generate_random_name(prefix="kobart")
+
+    set_manual_seed_all(args.seed)
+    return args
+
+
 def train_epoch(
     config, 
     criterion, 
@@ -235,7 +262,9 @@ def train_epoch(
     return epoch_loss    
 
 
-def train(config):
+def train():
+    config = configure()
+
     if config.wandb:
         wandb_run, wandb_artifact, wandb_text_table = init_wandb(config)
 
@@ -379,34 +408,9 @@ def train(config):
                 os.remove(model_path_to_remove)
     else:
         final_model_path = None
-    return evaluator, final_model_path
+    # return evaluator, final_model_path
+    print_best_model(evaluator, best_model_path)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--base_dir', required=True)
-    parser.add_argument('--exp_name')
-    parser.add_argument('--tapt')
-    parser.add_argument('--checkpoint')
-    parser.add_argument('--plm_name', default='hyunwoongko/kobart')
-    parser.add_argument('--max_input_length', type=int, default=512)
-    
-    add_arguments_for_training(parser)
-    add_arguments_for_generation(parser)
-    add_arguments_for_lr_scheduler(parser)
-    add_arguments_for_config(parser)
-
-    args = parser.parse_args()
-    logging.info(args)
-
-    args.data_dir = f"{args.base_dir}/data"
-    args.asset_dir = f"{args.base_dir}/assets"
-    args.model_dir = f"{args.base_dir}/models"
-    args.checkpoint_dir = f"{args.base_dir}/checkpoints"
-    args.exp_name = args.exp_name if args.exp_name is not None else generate_random_name(prefix="kobart")
-
-    set_manual_seed_all(args.seed)
-
-    evaluator, best_model_path = train(args)
-    print_best_model(evaluator, best_model_path)
-  
+    train()
