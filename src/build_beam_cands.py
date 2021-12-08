@@ -78,7 +78,6 @@ if __name__ == '__main__':
     # parser.add_argument('--sum_batch_size', type=int)
     parser.add_argument('--bart_path', default='hyunwoongko/kobart')
     # parser.add_argument('--checkpoint')
-    parser.add_argument('--num_cands', type=int)
     parser.add_argument('--max_input_length', type=int, default=512)
     
     add_arguments_for_training(parser)
