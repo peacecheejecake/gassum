@@ -46,7 +46,7 @@ def build_candidates(config, data, device):
         model_gen = bart.generate(
             **inputs['model_inputs'],
             num_beams=config.beam_size,
-            cnum_return_sequences=config.num_cands,
+            num_return_sequences=config.num_cands,
             repetition_penalty=config.repetition_penalty,
             length_penalty=config.length_penalty,
             no_repeat_ngram_size=config.no_repeat_ngram_size,
