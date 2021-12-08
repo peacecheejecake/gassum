@@ -81,6 +81,7 @@ def train(config, device):
         'best_rouge': {'rouge-1': 0, 'rouge-2': 0, 'rouge-l': 0},
         'stop_count': 0
     }
+    start_epoch = 0
     if config.checkpoint is not None:
         if os.path.exists(config.checkpoint):
             checkpoint = torch.load(config.checkpoint)
