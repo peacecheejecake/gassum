@@ -62,7 +62,7 @@ def build_candidates(config, data, device):
         ]
         rouge_scores = [
             val.high.fmeasure
-            for val in rouge.compute_rouge(predictions=summaries, references=references)
+            for val in rouge.compute(predictions=summaries, references=references)
         ]
         print(rouge_scores)
         candidates.append([s for _, s in sorted(zip(rouge_scores, summaries), reverse=True)])
