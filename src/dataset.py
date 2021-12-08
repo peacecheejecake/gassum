@@ -392,10 +392,10 @@ class DatasetForReranker(Dataset):
             'max_length': self.config.max_input_length,
             'return_tensors': 'pt',
         }
-        docs = {key: val.to(device) for key, val in self.tokenizer(docs, **tokenizer_configs)}
-        cands = {key: val.to(device) for key, val in self.tokenizer(cands, **tokenizer_configs)}
+        docs = {key: val.to(device) for key, val in self.tokenizer(docs, **tokenizer_configs).values()}
+        cands = {key: val.to(device) for key, val in self.tokenizer(cands, **tokenizer_configs).values()}
         inputs = (docs, cands)
         if self.require_golds:
-            golds = {key: val.to(device) for key, val in self.tokenizer(golds, **tokenizer_configs)}
+            golds = {key: val.to(device) for key, val in self.tokenizer(golds, **tokenizer_configs).values()}
             inputs += (golds,)
         return inputs
