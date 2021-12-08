@@ -351,7 +351,7 @@ def load_checkpoint(config, model, optimizer, lr_scheduler, evaluator):
                     print("Best model history is not in checkpoint.")
 
                 if checkpoint.get('epoch') is not None or checkpoint.get('history') is not None:
-                    evaluator.load_start_epoch_from_checkpoint(checkpoint)
+                    evaluator.load_history_from_checkpoint(checkpoint)
                 else:
                     print("Couldn't found epoch record. Start from epoch 1.")
             else:
