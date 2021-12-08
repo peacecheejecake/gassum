@@ -172,7 +172,7 @@ class SimCLSRerankCriterion(_CriterionBase):
 
     def forward(self, docs, cands, golds):
         batch_size = docs['input_ids'].size(0)
-        num_cands = self.gen_config['num_return_sequences']
+        num_cands = cands['input_ids'].size(0) // batch_size
         assert num_cands == cands['input_ids'].size(0) // batch_size
 
         doc_embeddings = self.encoder(**docs)[0][:, 0, :]
