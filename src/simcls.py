@@ -223,7 +223,7 @@ def train_epoch(
         loss = criterion(*inputs)
         optimizer.zero_grad()
         loss.backward()
-        nn.utils.clip_grad_norm_(criterion.model.parameter(), config.max_grad_norm)
+        nn.utils.clip_grad_norm_(criterion.model.parameters(), config.max_grad_norm)
         optimizer.step()
         lr_scheduler.step()
 
