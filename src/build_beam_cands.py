@@ -34,10 +34,10 @@ def build_candidates(config, data, device):
     dataset = KobartLabeledDataset(config, data, tokenizer, for_train=False)
     dataloader = DataLoader(
         dataset, 
-        batch_size=1, 
+        batch_size=config.batch_size, 
         collate_fn=lambda b: dataset.collate(b, device),
     )
-    
+
     candidates = []
     bart.eval()
     start_time = datetime.now()
@@ -53,19 +53,37 @@ def build_candidates(config, data, device):
             early_stopping=True,
             max_length=config.max_gen_length,
         )
-        
+
         predictions = [
             _postprocess(gen, tokenizer) for gen in tokenizer.batch_decode(model_gen[:, 1:])
         ]
         references = [
             _postprocess(ref, tokenizer) for ref in inputs['labels']
         ]
-        rouge_scores = [
-            val.mid.fmeasure
-            for val in rouge.compute(predictions=predictions, references=references * len(predictions)).values()
-        ]
-        print(rouge_scores)
-        candidates.append([p for _, p in sorted(zip(rouge_scores, predictions), reverse=True)])
+
+        for i, ref in enumerate(references):
+            _candidates = [_postprocess(p) for p in predictions[i * config.num_cands: (i + 1) * config.num_cands]]
+            rouge_scores = [
+                sum(val.mid.fmeasure for val in agg.values()) 
+                for agg 
+                in rouge.compute(
+                    predictions=_candidates,
+                    references=[_postprocess(ref)] * config.num_cands,
+                )
+            ]
+            print(rouge_scores)
+            candidates.append([c for _, c in sorted(zip(rouge_scores, _candidates), reverse=True)])
+
+        
+
+        # rouge_scores = [
+        #     sum(
+        #         val.mid.fmeasure
+        #         for val in rouge.compute(predictions=predictions, references=references * len(predictions)).values()
+        #     )
+        # ]
+        # print(rouge_scores)
+        # candidates.append([p for _, p in sorted(zip(rouge_scores, predictions), reverse=True)])
     
     data['candidates'] = candidates
     return data
@@ -75,6 +93,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--base_dir', required=True)
     parser.add_argument('--bart_path', required=True)
+    parser.add_argument('--batch_size', type=int, required=True)
     parser.add_argument('--bart_name', default='hyunwoongko/kobart')
     parser.add_argument('--max_input_length', type=int, default=512)
     
