@@ -62,13 +62,13 @@ def build_candidates(config, data, device):
         ]
 
         for i, ref in enumerate(references):
-            _candidates = [_postprocess(p) for p in predictions[i * config.num_cands: (i + 1) * config.num_cands]]
+            _candidates = predictions[i * config.num_cands: (i + 1) * config.num_cands]
             rouge_scores = [
                 sum(val.mid.fmeasure for val in agg.values()) 
                 for agg 
                 in rouge.compute(
                     predictions=_candidates,
-                    references=[_postprocess(ref)] * config.num_cands,
+                    references=[ref] * config.num_cands,
                 )
             ]
             print(rouge_scores)
