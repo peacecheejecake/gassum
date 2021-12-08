@@ -44,7 +44,7 @@ def build_candidates(config, data, device):
     for step, inputs in enumerate(dataloader):
         print(f"\r{(step + 1) / len(dataloader) * 100:.02f}% ({str(datetime.now() - start_time)})", end="")
         model_gen = bart.generate(
-            **inputs,
+            **inputs['model_inputs'],
             num_beams=config.beam_size,
             cnum_return_sequences=config.num_cands,
             repetition_penalty=config.repetition_penalty,
