@@ -67,8 +67,10 @@ def build_candidates(config, data, device):
                 sum(val.mid.fmeasure for val in rouge.compute(predictions=[cand], references=[ref]).values())
                 for cand in _candidates
             ]
-            candidates.append([c for _, c in sorted(zip(rouge_scores, _candidates), reverse=True)])
-            print(rouge_scores)
+            temp = [c for _, c in sorted(zip(rouge_scores, _candidates), reverse=True)]
+            candidates.append(temp)
+            print(temp)
+            
     
     data['candidates'] = candidates
     return data
