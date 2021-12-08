@@ -110,7 +110,7 @@ def init_lr_scheduler(config, optimizer, num_batches):
         lr_scheduler = ConstantLRScheduler(
             optimizer=optimizer, 
             lr=config.lr,
-            warmup_steps=num_batches * config.warmup_epochs,
+            warmup_steps=int(num_batches * config.warmup_epochs),
             warmup_start_lr=config.warmup_start_lr,
         )
     elif config.lr_scheduler == 'simple':
