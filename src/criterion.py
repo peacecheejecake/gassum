@@ -190,6 +190,7 @@ class SimCLSRerankCriterion(_CriterionBase):
             torch.arange(num_cands)
             .unsqueeze(0)
             .repeat_interleave(batch_size, dim=0)
+            .to(scores_gold.device)
         )
         margins = self.rerank(ranks) * self.margin_lambda
         scores_cls = self.rerank(sims_doc_cand, margins).sum((2,1))
