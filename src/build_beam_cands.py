@@ -9,7 +9,8 @@ import torch
 from torch.utils.data import DataLoader
 
 from transformers import AutoTokenizer, BartForConditionalGeneration, BartConfig
-from datasets import load_metric
+# from datasets import load_metric
+from rouge import Rouge
 
 from dataset import KobartLabeledDataset
 from evaluate import load_eval_data_from_jsonl
@@ -28,7 +29,8 @@ def build_candidates(config, data, device):
     bart.load_state_dict(bart_finetuned)
     bart = bart.to(device)
 
-    rouge = load_metric('rouge')
+    # rouge = load_metric('rouge')
+    rouge = Rouge()
 
     tokenizer = AutoTokenizer.from_pretrained('hyunwoongko/kobart')
     dataset = KobartLabeledDataset(config, data, tokenizer, for_train=False)
@@ -54,27 +56,34 @@ def build_candidates(config, data, device):
             max_length=config.max_gen_length,
         )
 
-        # predictions = [
-        #     _postprocess(gen, tokenizer) for gen in tokenizer.batch_decode(model_gen[:, 1:])
-        # ]
-        # references = [
-        #     _postprocess(ref, tokenizer) for ref in inputs['labels']
-        # ]
-        predictions = tokenizer.batch_decode(model_gen[:, 1:])
-        references = inputs['labels']
-
-        for i, ref in enumerate(references):
+        predictions = [
+            _postprocess(gen, tokenizer) for gen in tokenizer.batch_decode(model_gen[:, 1:])
+        ]
+        references = [
+            [_postprocess(ref, tokenizer)] * config.num_cands for ref in inputs['labels']
+        ]
+        for i, _references in enumerate(references):
             _candidates = predictions[i * config.num_cands: (i + 1) * config.num_cands]
-            rouge_scores = [
-                sum(
-                    val.mid.fmeasure 
-                    for val 
-                    in rouge.compute(predictions=[cand], references=[ref]).values()
-                )
-                for cand in _candidates
+            scores = [
+                sum(value['f'] for value in score.values())
+                for score
+                in rouge.get_scores(predictions, references) # avg=False
             ]
-            candidates.append([c for _, c in sorted(zip(rouge_scores, _candidates), reverse=True)])
+            candidates.append([c for _, c in sorted(zip(scores, _candidates), reverse=True)])
             print(len(candidates))
+        # for i, _reference in enumerate(references):
+        #     _candidates = predictions[i * config.num_cands: (i + 1) * config.num_cands]
+        #     rouge.compute(predictions=_candidates, references=[_references]).values()
+        #     rouge_scores = [
+        #         sum(
+        #             val.mid.fmeasure 
+        #             for val 
+        #             in rouge.compute(predictions=[cand], references=[ref]).values()
+        #         )
+        #         for cand in _candidates
+        #     ]
+        #     candidates.append([c for _, c in sorted(zip(rouge_scores, _candidates), reverse=True)])
+        #     print(len(candidates))
     data['candidates'] = candidates
     return data
 
