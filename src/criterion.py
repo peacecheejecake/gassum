@@ -144,3 +144,8 @@ class LabelSmoothingCrossEntropyCriterion(_CriterionBase):
     def forward(self, model_inputs, labels):
         logits = self.get_flattened_logits(**model_inputs)
         return self.compute_loss(logits, labels.view(-1))
+
+
+class SimCLSCriterion(_CriterionBase):
+
+    
