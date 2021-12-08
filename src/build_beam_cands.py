@@ -54,11 +54,17 @@ def build_candidates(config, data, device):
             max_length=config.max_gen_length,
         )
 
+        # predictions = [
+        #     _postprocess(gen, tokenizer) for gen in tokenizer.batch_decode(model_gen[:, 1:])
+        # ]
+        # references = [
+        #     _postprocess(ref, tokenizer) for ref in inputs['labels']
+        # ]
         predictions = [
-            _postprocess(gen, tokenizer) for gen in tokenizer.batch_decode(model_gen[:, 1:])
+            gen for gen in tokenizer.batch_decode(model_gen[:, 1:])
         ]
         references = [
-            _postprocess(ref, tokenizer) for ref in inputs['labels']
+            ref for ref in inputs['labels']
         ]
 
         for i, ref in enumerate(references):
