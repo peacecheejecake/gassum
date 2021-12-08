@@ -27,7 +27,7 @@ def evaluate(args, model, eval_loader):
     summaries = []
     model.eval()
     for step, inputs in enumerate(eval_loader):
-        print(f"\r{(step + 1) / len(eval_loader) * 100}% ({str(datetime.now() - start_time)})", end="")
+        print(f"\r{(step + 1) / len(eval_loader) * 100:.02f}% ({str(datetime.now() - start_time)})", end="")
         model_gen = model.generate(
             **inputs,
             num_beams=args.beam_size,

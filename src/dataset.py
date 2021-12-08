@@ -1,4 +1,5 @@
 import random
+from collections import defaultdict
 import numpy as np
 
 import torch
@@ -345,3 +346,45 @@ class KobartDatasetForPreTraining(_DatasetBase):
         if start_idx is None:
             start_idx = np.random.randint(len(tokens) - max_length)
         return tokens[start_idx: start_idx + max_length]
+
+
+class DatasetForReranker(Dataset):
+
+    def __init__(
+        self,
+        config,
+        data,
+        summarizer,
+        tokenizer,
+        *,
+        labeled=False,
+        gen_config=None,
+    ):
+        self.config = config
+        self.data = data
+        self.tokenizer = tokenizer
+        self.labeled = labeled
+
+        default_gen_config = {
+            'max_length': 512,
+            'num_beams': 16,
+            'no_repeat_ngram_size': 2,
+            'num_return_sequences': 16,
+            'early_stopping': True,
+        }
+        if gen_config is not None and not isinstance(gen_config, dict):
+            raise TypeError
+        elif gen_config is None:
+            self.gen_config = default_gen_config
+        else:
+            for key in default_gen_config:
+                if gen_config.get(key) is None:
+                    gen_config[key] = default_gen_config[key]
+            self.gen_config = gen_config
+
+        self.num_cands = self.gen_config['num_return_sequences']
+
+    def build_candidates(data, summairzer, bart_name='hyunwoongko/kobart'):
+        tokenizer = AutoTokenizer.from_pretrained(bart_name)
+        candidates = []
+        summarizer.generate()

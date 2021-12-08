@@ -1,9 +1,18 @@
 import argparse
 import logging
 import os
+import datetime
 
 import torch
-from transformers import AutoTokenizer, AutoModel
+from torch.utils.data.dataloader import DataLoader
+
+from transformers import (
+    AutoTokenizer, 
+    AutoModel, 
+    BartForConditionalGeneration, 
+    BartConfig,
+)
+from datasets import load_metric
 
 from train import (
     init_wandb, 
@@ -13,6 +22,7 @@ from train import (
     load_model,
 )
 from utils import (
+    _postprocess,
     add_arguments_for_config,
     add_arguments_for_generation,
     add_arguments_for_lr_scheduler,
@@ -21,6 +31,10 @@ from utils import (
     print_best_model,
     load_data_from_json,
 )
+from dataset import KobartLabeledDataset
+from validate import RougeEvaluator
+
+
 
 
 def train(config):
@@ -78,9 +92,12 @@ if __name__ == '__main__':
     parser.add_argument('--base_dir', required=True)
     parser.add_argument('--exp_name')
     # parser.add_argument('--tapt')
-    # parser.add_argument('--checkpoint')
     parser.add_argument('--bart_name', default='hyunwoongko/kobart')
+    parser.add_argument('--sum_batch_size', type=int)
+    parser.add_argument('--bart_path', default='hyunwoongko/kobart')
+    parser.add_argument('--checkpoint')
     parser.add_argument('--scorer_name', default='kykim/electra-kor-base')
+    parser.add_argument('--num_cands', type=int)
     parser.add_argument('--max_input_length', type=int, default=512)
     
     add_arguments_for_training(parser)

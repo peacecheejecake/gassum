@@ -146,13 +146,55 @@ class LabelSmoothingCrossEntropyCriterion(_CriterionBase):
         return self.compute_loss(logits, labels.view(-1))
 
 
-class SimCLSCriterion(_CriterionBase):
+class SimCLSRerankCriterion(_CriterionBase):
 
     def __init__(
         self,
-        model, 
+        encoder,
+        margin_lambda=0.01,
         label_smoothing=0.0,
         ignore_index=-100, 
-        reduction='sum', 
+        reduction='sum',
     ):
-        pass
+        super().__init__(
+            model=encoder, 
+            label_smoothing=label_smoothing,
+            ignore_index=ignore_index, 
+            reduction=reduction, 
+        )
+        self.encoder = self.model
+        self.margin_lambda = margin_lambda
+
+    def rerank(self, matrix, margin=0.):
+        upper = matrix.unsqueeze(-1).repeat_interleave(matrix.size(-1), dim=-1)
+        lower = matrix.unsqueeze(1).repeat_interleave(matrix.size(-1), dim=1)
+        return F.relu((lower - upper + margin).triu(1))
+
+    def forward(self, docs, cands, golds):
+        batch_size = docs['input_ids'].size(0)
+        num_cands = self.gen_config['num_return_sequences']
+        assert num_cands == cands['input_ids'].size(0) // batch_size
+
+        doc_embeddings = self.encoder(**docs)[0][:, 0, :]
+        gold_embeddings = self.encoder(**golds)[0][:, 0, :]
+        sims_doc_gold = torch.cosine_similarity(doc_embeddings, gold_embeddings, dim=-1)
+
+        cand_embeddings = self.encoder(**cands)[0][:, 0, :].view(batch_size, num_cands, -1)
+        doc_embeddings = doc_embeddings.unsqueeze(1).repeat_interleave(num_cands, dim=1)
+        sims_doc_cand = torch.cosine_similarity(doc_embeddings, cand_embeddings, dim=-1)
+
+        scores_gold = sims_doc_cand - sims_doc_gold.unsqueeze(1).repeat_interleave(num_cands, dim=1)
+        scores_gold = F.relu(scores_gold).sum(1)
+
+        ranks = (
+            torch.arange(num_cands)
+            .unsqueeze(0)
+            .repeat_interleave(batch_size, dim=0)
+        )
+        margins = self.rerank(ranks) * self.margin_lambda
+        scores_cls = self.rerank(sims_doc_cand, margins).sum((2,1))
+
+        score = (scores_gold + scores_cls).sum()
+        if self.reduction == 'mean':
+            score /= batch_size
+        return score
