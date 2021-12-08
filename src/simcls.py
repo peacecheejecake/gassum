@@ -324,8 +324,6 @@ if __name__ == '__main__':
     # parser.add_argument('--tapt')
     parser.add_argument('--checkpoint')
     parser.add_argument('--encoder_name', default='kykim/electra-kor-base')
-    parser.add_argument('--num_cands', type=int)
-    parser.add_argument('--max_input_length', type=int, default=512)
     
     add_arguments_for_training(parser)
     add_arguments_for_lr_scheduler(parser)
