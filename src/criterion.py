@@ -148,4 +148,4 @@ class LabelSmoothingCrossEntropyCriterion(_CriterionBase):
 
 class SimCLSCriterion(_CriterionBase):
 
-    
+    pass
