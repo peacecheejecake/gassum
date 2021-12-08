@@ -192,5 +192,8 @@ class SimpleLRScheduler(LRSchedulerBase):
         super().__init__(optimizer, lr)
         
     def get_lr(self, step=None):
+        if step is None:
+            step = self._step_count
+            
         return self.max_lr * min(step ** -0.5, step * self.warmup_steps ** -1.5)
         
