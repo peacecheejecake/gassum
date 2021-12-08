@@ -116,7 +116,7 @@ def init_lr_scheduler(config, optimizer, num_batches):
 
 
 def init_criterion(config, model, ignore_id=-100):
-    if args.rdrop:
+    if config.rdrop:
         criterion = LabelSmoothingRDropCriterion(
             model,
             alpha=0.7,
