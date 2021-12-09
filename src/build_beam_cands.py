@@ -110,19 +110,19 @@ if __name__ == '__main__':
     originals= []
     if args.train:
         originals.append((
-            'train_w_cands.csv', 
+            f'train_w_cands_{args.num_cands}.csv', 
             pd.read_csv('/content/drive/MyDrive/gassum/data/train_original.csv'),
             True,
         ))
     if args.valid:
         originals.append((
-            'valid_w_cands.csv', 
+            f'valid_w_cands_{args.num_cands}.csv', 
             pd.read_csv('/content/drive/MyDrive/gassum/data/valid_original.csv'),
             True,
         ))
     if args.eval:
         originals.append((
-            'new_test_w_cands.csv', 
+            f'new_test_w_cands_{args.num_cands}.csv', 
             pd.read_csv('/content/drive/MyDrive/gassum/data/new_test.csv'),
             False,
         ))
