@@ -241,7 +241,7 @@ def validate_epoch(config, encoder, dataloader):
     data = dataloader.dataset.data
     candidates_all = data['candidates']
     batch_size = config.valid_batch_size
-    num_cands = len(candidates_all[0]) # assume the same `num_cands` in every sample`
+    num_cands = len(eval(candidates_all[0])) # assume the same `num_cands` in every sample`
 
     encoder.eval()
     best_cands = []
@@ -284,7 +284,7 @@ def evaluate(config, device):
     data = dataloader.dataset.data
     candidates_all = data['candidates']
     batch_size = config.valid_batch_size
-    num_cands = len(candidates_all[0]) # assume the same `num_cands` in every sample`
+    num_cands = len(eval(candidates_all[0])) # assume the same `num_cands` in every sample`
 
     start_time = datetime.now()
     predictions = []
