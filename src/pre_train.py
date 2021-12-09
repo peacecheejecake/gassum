@@ -31,7 +31,6 @@ if __name__ == '__main__':
     parser.add_argument('--base_dir', required=True)
     parser.add_argument('--data_file', required=True)
     parser.add_argument('--plm_name', default='hyunwoongko/kobart')
-    parser.add_argument('--max_input_length', type=int, default=512)
     parser.add_argument('--checkpoints', nargs='+', default='')
     parser.add_argument('--fill_valid', action='store_true')
 
