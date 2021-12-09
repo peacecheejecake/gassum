@@ -2,6 +2,7 @@ import argparse
 import logging
 import random
 import os
+from datetime import datetime
 
 import torch
 from torch.utils.data import DataLoader
@@ -16,6 +17,7 @@ from utils import (
     add_arguments_for_config, 
     add_arguments_for_generation, 
     add_arguments_for_training,
+    print_simple_progress,
 )
 from dataset import KobartLabeledDataset
 
@@ -148,8 +150,13 @@ def validate_epoch(config, model, dataloader, evaluator=None, epoch=None, wandb_
         model.to(device)
     model.eval()
 
-    evaluator.init_epoch_rouge()
+    # evaluator.init_epoch_rouge()
+    predictions, references = [], []
+    start_time = datetime.now()
     for step, inputs in enumerate(dataloader):
+        if not quiet:
+            print_simple_progress(step, total_steps=len(dataloader), start_time=start_time)
+
         model_gen = model.generate(
             **inputs['model_inputs'],
             num_beams=config.beam_size,
@@ -159,25 +166,41 @@ def validate_epoch(config, model, dataloader, evaluator=None, epoch=None, wandb_
             early_stopping=True,
             max_length=config.max_gen_length,
         )
-        summaries = [
+        _predictions = [
             _postprocess(gen, tokenizer) for gen in tokenizer.batch_decode(model_gen[:, 1:])
         ]
-        references = [
+        _references = [
             _postprocess(ref, tokenizer) for ref in inputs['labels']
         ]
-        evaluator.compute_collect_rouge(summaries, references, len(dataloader))
+        # evaluator.compute_collect_rouge(summaries, references, len(dataloader))
         
-        if wandb_text_table is not None and config.wandb:
-            for i, (gen, ref) in enumerate(zip(summaries, references)):
-                idx = step * config.valid_batch_size + i
-                wandb_text_table.add_data(epoch + 1, idx, gen, ref)
+        # if wandb_text_table is not None and config.wandb:
+        #     for i, (gen, ref) in enumerate(zip(summaries, references)):
+        #         idx = step * config.valid_batch_size + i
+        #         wandb_text_table.add_data(epoch + 1, idx, gen, ref)
+
+        predictions.extend(_predictions)
+        references.extend(_references)
 
         if not quiet:
             if step in (0, random_step):
                 print()
-                for gen, ref in zip(summaries[:5], references[:5]):
-                    print(f'{gen}\n{ref}\n')
-    return evaluator.end_of_epoch()
+                # for gen, ref in zip(summaries[:5], references[:5]):
+                #     print(f'{gen}\n{ref}\n')
+                for gen in _predictions[:5]:
+                    print(f'{gen}')
+                print()
+
+    # return evaluator.end_of_epoch()
+    
+    rouge_score = {
+        key: val['f']
+        for key, val
+        in Rouge().get_scores(predictions, references, avg=True).items()
+    }
+    if not quiet:
+        print(f'\n{rouge_score}')
+    return rouge_score
 
 
 if __name__ == '__main__':
