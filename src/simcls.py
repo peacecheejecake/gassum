@@ -281,7 +281,7 @@ def validate_epoch(config, encoder, dataloader, *, quiet=False):
 @torch.no_grad()
 def evaluate(config, device):
     tokenizer = AutoTokenizer.from_pretrained(config.encoder_name)
-    data = pd.read_csv(config.eval_data)
+    data = pd.read_csv(os.path.join(config.data_dir, config.eval_data))
     dataset = DatasetForReranker(config, data, tokenizer)
     dataloader = DataLoader(
         dataset, 
