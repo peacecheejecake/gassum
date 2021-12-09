@@ -81,7 +81,6 @@ if __name__ == '__main__':
     parser.add_argument('--bart_path', required=True)
     parser.add_argument('--batch_size', type=int, required=True)
     parser.add_argument('--bart_name', default='hyunwoongko/kobart')
-    parser.add_argument('--max_input_length', type=int, default=512)
     parser.add_argument('--train', action='store_true')
     parser.add_argument('--valid', action='store_true')
     parser.add_argument('--eval', action='store_true')
