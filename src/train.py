@@ -2,9 +2,11 @@ import os
 import pickle
 import argparse
 import logging
+
+import pandas as pd
+
 from transformers import (
     AutoTokenizer,
-    BartConfig, 
     BartForConditionalGeneration, 
 )
 import wandb
@@ -200,6 +202,8 @@ def prepare_data_loaders(config, train_data, valid_data, tokenizer, device=None)
 def configure():
     parser = argparse.ArgumentParser()
     parser.add_argument('--base_dir', required=True)
+    parser.add_argument('--train_data', required=True)
+    parser.add_argument('--valid_data', required=True)
     parser.add_argument('--exp_name')
     parser.add_argument('--tapt')
     parser.add_argument('--checkpoint')
@@ -284,8 +288,10 @@ def train():
     tokenizer = AutoTokenizer.from_pretrained(config.plm_name)
     setattr(tokenizer, 'decoder_start_token_id', model.config.decoder_start_token_id)
 
-    train_data = load_data_from_json(os.path.join(config.data_dir, 'train_original.json'))
-    valid_data = load_data_from_json(os.path.join(config.data_dir, 'valid_original.json'))
+    # train_data = load_data_from_json(os.path.join(config.data_dir, 'train_original.json'))
+    # valid_data = load_data_from_json(os.path.join(config.data_dir, 'valid_original.json'))
+    train_data = pd.read_csv(os.path.join(config.data_dir, config.train_data))
+    valid_data = pd.read_csv(os.path.join(config.data_dir, config.valid_data))
     train_loader, valid_loader = prepare_data_loaders(
         config,
         train_data, 
