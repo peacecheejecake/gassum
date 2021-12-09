@@ -268,9 +268,13 @@ def validate_epoch(config, encoder, dataloader, *, quiet=False):
             for cand_list, idx in zip(cand_lists, best_cand_indices)
         )
 
-    rouge_score = Rouge().get_scores(best_cands, list(data['summary']), avg=True)
+    rouge_score = {
+        key: val['f']
+        for key, val
+        in Rouge().get_scores(best_cands, list(data['summary']), avg=True).items()
+    }
     if not quiet:
-        print('\n', {key: val['f'] for key, val in rouge_score.items()})
+        print(f'\n{rouge_score}')
     return rouge_score
 
 
