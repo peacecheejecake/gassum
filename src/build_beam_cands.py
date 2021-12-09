@@ -75,7 +75,6 @@ def build_candidates(config, data, device, *, labeled):
         else:
             for i in range(0, len(predictions), config.num_cands):
                 candidates.append(predictions[i: i + config.num_cands])
-        print(len(candidates))
         
     data['candidates'] = candidates
     return data
