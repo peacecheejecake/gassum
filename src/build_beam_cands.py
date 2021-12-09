@@ -1,7 +1,7 @@
 import argparse
 import logging
 import os
-from datetime import datetime, strptime
+from datetime import datetime
 
 import pandas as pd
 
@@ -9,11 +9,9 @@ import torch
 from torch.utils.data import DataLoader
 
 from transformers import AutoTokenizer, BartForConditionalGeneration, BartConfig
-# from datasets import load_metric
 from rouge import Rouge
 
 from dataset import KobartLabeledDataset
-from evaluate import load_eval_data_from_jsonl
 from utils import (
     add_arguments_for_generation,
     add_arguments_for_training,
@@ -103,9 +101,9 @@ if __name__ == '__main__':
     )
 
     originals= [
-        ('train_w_cands.csv', pd.read_csv('/content/drive/MyDrive/gassum/data/train_original.csv')),
-        ('valid_w_cands.csv', pd.read_csv('/content/drive/MyDrive/gassum/data/valid_original.csv')),
-        ('new_test_w_cands.csv', load_eval_data_from_jsonl('/content/drive/MyDrive/gassum/data/new_test.jsonl')),
+        # ('train_w_cands.csv', pd.read_csv('/content/drive/MyDrive/gassum/data/train_original.csv')),
+        # ('valid_w_cands.csv', pd.read_csv('/content/drive/MyDrive/gassum/data/valid_original.csv')),
+        ('new_test_w_cands.csv', pd.read_csv('/content/drive/MyDrive/gassum/data/new_test.csv')),
     ]
     for out_name, data in originals:
         data = build_candidates(args, data, device)
