@@ -60,17 +60,21 @@ def build_candidates(config, data, device, *, labeled):
         predictions = [
             _postprocess(gen, tokenizer) for gen in tokenizer.batch_decode(model_gen[:, 1:])
         ]
-        references = [
-            [_postprocess(ref, tokenizer)] * config.num_cands for ref in inputs['labels']
-        ]
-        for i, _references in enumerate(references):
-            _candidates = predictions[i * config.num_cands: (i + 1) * config.num_cands]
-            scores = [
-                sum(value['f'] for value in score.values())
-                for score
-                in rouge.get_scores(_candidates, _references) # avg=False
+        if labeled:
+            references = [
+                [_postprocess(ref, tokenizer)] * config.num_cands for ref in inputs['labels']
             ]
-            candidates.append([c for _, c in sorted(zip(scores, _candidates), reverse=True)])
+            for i, _references in enumerate(references):
+                _candidates = predictions[i * config.num_cands: (i + 1) * config.num_cands]
+                scores = [
+                    sum(value['f'] for value in score.values())
+                    for score
+                    in rouge.get_scores(_candidates, _references) # avg=False
+                ]
+                candidates.append([c for _, c in sorted(zip(scores, _candidates), reverse=True)])
+        else:
+            for i in range(len(references)):
+                candidates.append(predictions[i * config.num_cands: (i + 1) * config.num_cands])
         print(len(candidates))
         
     data['candidates'] = candidates
