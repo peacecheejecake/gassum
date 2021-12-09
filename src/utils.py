@@ -344,6 +344,7 @@ def add_arguments_for_config(parser):
     parser.add_argument('--off_saving', action='store_true')
     parser.add_argument('-q', '--quiet', action='store_true')
     parser.add_argument('--test_few', action='store_true')
+    parser.add_argument('--memory_test', action='store_true')
 
 
 def load_checkpoint(config, model, optimizer, lr_scheduler, evaluator):

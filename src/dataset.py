@@ -387,7 +387,7 @@ class DatasetForReranker(Dataset):
                 golds.append(sample['summary'])
         
         tokenizer_configs = {
-            'padding': 'longest',
+            'padding': 'max_length' if self.config.memory_test else 'longest',
             'truncation': True,
             'max_length': self.config.max_input_length,
             'return_tensors': 'pt',
