@@ -255,10 +255,13 @@ def validate_epoch(config, encoder, dataloader, *, quiet=False):
             .repeat_interleave(num_cands, dim=0)
             .view(batch_size, num_cands, -1)
         )
-        cand_embeddings = (
-            encoder(**cands)[0][:, 0, :]
-            .view(batch_size, num_cands, -1)
-        )
+        try:
+            cand_embeddings = (
+                encoder(**cands)[0][:, 0, :]
+                .view(batch_size, num_cands, -1)
+            )
+        except RuntimeError:
+            print(encoder(**cands)[0][:, 0, :].shape, batch_size * num_cands)
         scores = torch.cosine_similarity(doc_embeddings, cand_embeddings, dim=-1)
         best_cand_indices = scores.argmax(-1).tolist()
         cand_lists = candidates_all.iloc[batch_size * step: batch_size * (step + 1)]
