@@ -84,7 +84,7 @@ def train(config, device):
     start_epoch = 0
     if config.checkpoint is not None:
         if os.path.exists(config.checkpoint):
-            checkpoint = torch.load(config.checkpoint)
+            checkpoint = torch.load(config.checkpoint, map_location=device)
             encoder.load_state_dict(checkpoint['model'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
