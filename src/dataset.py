@@ -86,6 +86,8 @@ class _DatasetBase(Dataset):
             texts = batch
 
         def max_token_length(tokens):
+            if self.config.memory_test:
+                return self.max_seq_length
             return min(max(map(len, tokens)), self.max_seq_length)
 
         max_input_length = max_token_length(texts)

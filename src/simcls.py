@@ -163,7 +163,7 @@ def train(config, device):
                 'lr': lr_scheduler.get_last_lr(), 
                 **epoch_score,
                 'rouge_sum': sum(epoch_score.values()),
-                **{f"best_{key}": val for key, val in history['best_rouge']},
+                **{f"best_{key}": val for key, val in history['best_rouge'].items()},
                 'best_rouge_sum': sum(history['best_rouge'].values()),
             })
         
