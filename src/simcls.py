@@ -127,7 +127,7 @@ def train(config, device):
             epoch=epoch,
             device=device,
         )
-        epoch_score = validate_epoch(config, encoder, valid_loader)
+        epoch_score = validate_epoch(config, encoder, valid_loader, quiet=True)
 
         if sum(epoch_score.values()) > sum(history['best_rouge'].values()):
             history['best_rouge'] = epoch_score
@@ -237,7 +237,7 @@ def train_epoch(
 
 
 @torch.no_grad()
-def validate_epoch(config, encoder, dataloader):
+def validate_epoch(config, encoder, dataloader, *, quiet=False):
     data = dataloader.dataset.data
     candidates_all = data['candidates']
     batch_size = config.valid_batch_size
@@ -245,7 +245,11 @@ def validate_epoch(config, encoder, dataloader):
 
     encoder.eval()
     best_cands = []
+    start_time = datetime.now()
     for step, (docs, cands) in enumerate(dataloader):
+        if not quiet:
+            print_simple_progress(step, total_steps=len(dataloader), start_time=start_time)
+
         doc_embeddings = (
             encoder(**docs)[0][:, 0, :]
             .repeat_interleave(num_cands, dim=0)
