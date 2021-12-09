@@ -273,8 +273,7 @@ def print_simple_progress(step, total_steps, start_time):
     seconds_elapsed = (datetime.now() - start_time).total_seconds()
     seconds_left = (1 - progress_ratio) / progress_ratio * seconds_elapsed
     print(
-        f"\r{progress_ratio * 100:.02f}%",
-        f"({sec_to_str(seconds_elapsed)}|{sec_to_str(seconds_left)})", 
+        f"\r{progress_ratio * 100:.02f}% ({sec_to_str(seconds_elapsed)}|{sec_to_str(seconds_left)})", 
         end=""
     )
 
