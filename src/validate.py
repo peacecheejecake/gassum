@@ -3,6 +3,7 @@ import logging
 import random
 import os
 from datetime import datetime
+import pandas as pd
 
 import torch
 from torch.utils.data import DataLoader
@@ -206,7 +207,8 @@ def validate_epoch(config, model, dataloader, evaluator=None, epoch=None, wandb_
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--base_dir', required=True)
-    parser.add_argument('--model_name', required=True)
+    parser.add_argument('--valid_data', required=True)
+    parser.add_argument('--model_name')
     parser.add_argument('--plm_name', default='hyunwoongko/kobart')
     # parser.add_argument('--bos_at_front', action='store_true')
     # parser.add_argument('--valid_ratio', type=float, default=0.2)
@@ -237,12 +239,14 @@ if __name__ == '__main__':
     set_manual_seed_all(args.seed)
 
     model = BartForConditionalGeneration.from_pretrained(args.plm_name).to(device)
-    model.load_state_dict(torch.load(f'{model_dir}/{args.model_name}.pth'))
+    if args.model_name is not None:
+        model.load_state_dict(torch.load(f'{model_dir}/{args.model_name}.pth'))
 
     tokenizer = AutoTokenizer.from_pretrained(args.plm_name)
     setattr(tokenizer, 'decoder_start_token_id', model.config.decoder_start_token_id)
 
-    valid_data = load_data_from_json(os.path.join(data_dir, 'valid_original.json'))
+    # valid_data = load_data_from_json(os.path.join(data_dir, 'valid_original.json'))
+    valid_data = pd.read_csv(os.path.join(data_dir, args.valid_data))
     valid_dataset = KobartLabeledDataset(args, valid_data, tokenizer, for_train=False)
     valid_loader = DataLoader(
         valid_dataset, 
