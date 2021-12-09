@@ -341,7 +341,7 @@ if __name__ == '__main__':
     # parser.add_argument('--tapt')
     parser.add_argument('--checkpoint')
     parser.add_argument('--encoder_name', default='kykim/electra-kor-base')
-    parser.add_argument('--test_sample', action='store_true')
+    parser.add_argument('--test_few', action='store_true')
     
     add_arguments_for_training(parser)
     add_arguments_for_lr_scheduler(parser)
