@@ -19,7 +19,7 @@ class _DatasetBase(Dataset):
         for_train,
         labeled,
     ):
-        self.data = data
+        self.data = data if not config.test_few else data.iloc[:100]
         self.tokenizer = tokenizer
         self.max_seq_length = config.max_input_length
         self.train = for_train
