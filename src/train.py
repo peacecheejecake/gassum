@@ -204,7 +204,6 @@ def configure():
     parser.add_argument('--tapt')
     parser.add_argument('--checkpoint')
     parser.add_argument('--plm_name', default='hyunwoongko/kobart')
-    parser.add_argument('--max_input_length', type=int, default=512)
     
     add_arguments_for_training(parser)
     add_arguments_for_generation(parser)
