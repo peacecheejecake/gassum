@@ -105,21 +105,21 @@ if __name__ == '__main__':
     if args.train:
         originals.append((
             'train_w_cands.csv', 
-            pd.read_csv('/content/drive/MyDrive/gassum/data/train_original.csv',
+            pd.read_csv('/content/drive/MyDrive/gassum/data/train_original.csv'),
             True,
-        )))
+        ))
     if args.valid:
         originals.append((
             'valid_w_cands.csv', 
-            pd.read_csv('/content/drive/MyDrive/gassum/data/valid_original.csv',
+            pd.read_csv('/content/drive/MyDrive/gassum/data/valid_original.csv'),
             True,
-        )))
+        ))
     if args.eval:
         originals.append((
             'new_test_w_cands.csv', 
-            pd.read_csv('/content/drive/MyDrive/gassum/data/new_test.csv',
+            pd.read_csv('/content/drive/MyDrive/gassum/data/new_test.csv'),
             False,
-        )))
+        ))
 
     for out_name, data, labeled in originals:
         data = build_candidates(args, data, device, labeled=labeled)
