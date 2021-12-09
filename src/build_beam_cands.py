@@ -82,6 +82,9 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, required=True)
     parser.add_argument('--bart_name', default='hyunwoongko/kobart')
     parser.add_argument('--max_input_length', type=int, default=512)
+    parser.add_argument('--train', action='store_true')
+    parser.add_argument('--valid', action='store_true')
+    parser.add_argument('--eval', action='store_true')
     
     add_arguments_for_training(parser)
     add_arguments_for_generation(parser)
@@ -100,11 +103,14 @@ if __name__ == '__main__':
         else torch.device('cpu')
     )
 
-    originals= [
-        # ('train_w_cands.csv', pd.read_csv('/content/drive/MyDrive/gassum/data/train_original.csv')),
-        # ('valid_w_cands.csv', pd.read_csv('/content/drive/MyDrive/gassum/data/valid_original.csv')),
-        ('new_test_w_cands.csv', pd.read_csv('/content/drive/MyDrive/gassum/data/new_test.csv')),
-    ]
+    originals= []
+    if args.train:
+        originals.append(('train_w_cands.csv', pd.read_csv('/content/drive/MyDrive/gassum/data/train_original.csv')))
+    if args.valid:
+        originals.append(('valid_w_cands.csv', pd.read_csv('/content/drive/MyDrive/gassum/data/valid_original.csv')))
+    if args.eval:
+        originals.append(('new_test_w_cands.csv', pd.read_csv('/content/drive/MyDrive/gassum/data/new_test.csv')))
+
     for out_name, data in originals:
         data = build_candidates(args, data, device)
         data.to_csv(os.path.join(args.data_dir, out_name))
