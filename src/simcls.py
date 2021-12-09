@@ -112,10 +112,9 @@ def train(config, device):
     )
     
     encoder.to(device)
-    stop_count = 0
     best_model_path = None
     for epoch in range(start_epoch, config.num_epochs):
-        if stop_count > config.patience:
+        if history['stop_count'] > config.patience:
             break
 
         epoch_loss = train_epoch(
@@ -169,7 +168,7 @@ def train(config, device):
         
         for key, value in epoch_score.items():
             print(f"({key}) {value:.5f}", end=' ')
-        print(f"(stop count) {stop_count}")
+        print(f"(stop count) {history['stop_count']}")
     
     print(
         f"""
