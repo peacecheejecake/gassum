@@ -47,7 +47,7 @@ def build_candidates(config, data, device, *, labeled):
     for step, inputs in enumerate(dataloader):
         print_simple_progress(step, total_steps=len(dataloader), start_time=start_time)
         model_gen = bart.generate(
-            **inputs['model_inputs'],
+            **(inputs['model_inputs'] if labeled else inputs),
             num_beams=config.beam_size,
             num_return_sequences=config.num_cands,
             repetition_penalty=config.repetition_penalty,
