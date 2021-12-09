@@ -290,7 +290,8 @@ def evaluate(config, device):
     )
 
     encoder = AutoModel.from_pretrained(config.encoder_name)
-    encoder.load_state_dict(torch.load(config.checkpoint)['model'])
+    if config.checkpoint is not None:
+        encoder.load_state_dict(torch.load(config.checkpoint)['model'])
     encoder.to(device)
     encoder.eval()
 
