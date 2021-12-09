@@ -359,7 +359,7 @@ class DatasetForReranker(Dataset):
         require_golds=False,
     ):
         self.config = config
-        self.data = data
+        self.data = data if not config.test_sample else data.iloc[:100]
         self.tokenizer = tokenizer
         self.require_golds = require_golds
 
