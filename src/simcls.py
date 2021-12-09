@@ -265,7 +265,7 @@ def validate_epoch(config, encoder, dataloader, *, quiet=False):
         best_cand_indices = scores.argmax(-1).tolist()
         cand_lists = candidates_all.iloc[batch_size * step: batch_size * (step + 1)]
         best_cands.extend(
-            cand_list[idx] 
+            eval(cand_list)[idx] 
             for cand_list, idx in zip(cand_lists, best_cand_indices)
         )
     return Rouge().get_scores(best_cands, list(data['summary']), avg=True)
@@ -311,7 +311,7 @@ def evaluate(config, device):
         best_cand_indices = scores.argmax(-1).tolist()
         cand_lists = candidates_all.iloc[batch_size * step: batch_size * (step + 1)]
         predictions.extend(
-            cand_list[idx] 
+            eval(cand_list)[idx] 
             for cand_list, idx in zip(cand_lists, best_cand_indices)
         )
     
