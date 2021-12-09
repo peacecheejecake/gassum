@@ -73,8 +73,8 @@ def build_candidates(config, data, device, *, labeled):
                 ]
                 candidates.append([c for _, c in sorted(zip(scores, _candidates), reverse=True)])
         else:
-            for i in range(len(references)):
-                candidates.append(predictions[i * config.num_cands: (i + 1) * config.num_cands])
+            for i in range(0, len(predictions), config.num_cands):
+                candidates.append(predictions[i: i + config.num_cands])
         print(len(candidates))
         
     data['candidates'] = candidates
