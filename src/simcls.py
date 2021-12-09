@@ -96,6 +96,8 @@ def train(config, device):
                     wandb_run.log({'epoch': epoch})
                 for _ in train_loader:
                     pass
+
+            print(history)
         else:
             logging.warn('No checkpoint file exists.')
 
