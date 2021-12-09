@@ -251,7 +251,6 @@ def validate_epoch(config, encoder, dataloader, *, quiet=False):
     for step, (docs, cands) in enumerate(dataloader):
         if not quiet:
             print_simple_progress(step, total_steps=len(dataloader), start_time=start_time)
-
         doc_embeddings = (
             encoder(**docs)[0][:, 0, :]
             .repeat_interleave(num_cands, dim=0)
@@ -268,7 +267,11 @@ def validate_epoch(config, encoder, dataloader, *, quiet=False):
             eval(cand_list)[idx] 
             for cand_list, idx in zip(cand_lists, best_cand_indices)
         )
-    return Rouge().get_scores(best_cands, list(data['summary']), avg=True)
+
+    rouge_score = Rouge().get_scores(best_cands, list(data['summary']), avg=True)
+    if not quiet:
+        print('\n', {key: val['f'] for key, val in rouge_score.items()})
+    return rouge_score
 
 
 @torch.no_grad()
