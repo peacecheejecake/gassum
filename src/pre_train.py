@@ -100,8 +100,8 @@ if __name__ == '__main__':
     #         ignore_nan=True,
     #     )
 
-    train_data = pd.read_csv(os.path.join(args.data_dir, args.train_data))
-    valid_data = pd.read_csv(os.path.join(args.data_dir, args.valid_data))
+    train_data = pd.read_csv(os.path.join(data_dir, args.train_data))
+    valid_data = pd.read_csv(os.path.join(data_dir, args.valid_data))
 
     # start of folds
     for fold in range(args.num_folds):
