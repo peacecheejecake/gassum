@@ -340,7 +340,7 @@ def train():
             evaluator=evaluator,
             wandb_text_table=wandb_text_table if config.wandb else None,
             epoch=epoch,
-            quiet=config.quiet,
+            quiet=True,
         )
 
         evaluator.check_update_best(epoch_rouge)
