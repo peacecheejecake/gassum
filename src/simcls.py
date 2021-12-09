@@ -231,7 +231,7 @@ def train_epoch(
         print(
             f'\r{(step + 1) / len(dataloader) * 100:.1f} '
             f'[Epoch {epoch + 1:02d}] (train loss) {loss.item() / config.train_batch_size:.5f}',
-            end=''
+            end=' '
         )
     return epoch_loss
 
