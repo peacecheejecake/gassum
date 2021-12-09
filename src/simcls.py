@@ -248,11 +248,11 @@ def validate_epoch(config, encoder, dataloader):
     for step, (docs, cands) in enumerate(dataloader):
         doc_embeddings = (
             encoder(**docs)[0][:, 0, :]
+            .repeat_interleave(num_cands, dim=0)
             .view(batch_size, num_cands, -1)
         )
         cand_embeddings = (
             encoder(**cands)[0][:, 0, :]
-            .repeat_interleave(num_cands, dim=0)
             .view(batch_size, num_cands, -1)
         )
         scores = torch.cosine_similarity(doc_embeddings, cand_embeddings, dim=-1)
@@ -292,11 +292,11 @@ def evaluate(config, device):
         print_simple_progress(step, total_steps=len(dataloader), start_time=start_time)
         doc_embeddings = (
             encoder(**docs)[0][:, 0, :]
+            .repeat_interleave(num_cands, dim=0)
             .view(batch_size, num_cands, -1)
         )
         cand_embeddings = (
             encoder(**cands)[0][:, 0, :]
-            .repeat_interleave(num_cands, dim=0)
             .view(batch_size, num_cands, -1)
         )
         scores = torch.cosine_similarity(doc_embeddings, cand_embeddings, dim=-1)
