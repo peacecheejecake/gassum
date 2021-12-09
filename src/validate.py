@@ -185,7 +185,6 @@ if __name__ == '__main__':
     parser.add_argument('--base_dir', required=True)
     parser.add_argument('--model_name', required=True)
     parser.add_argument('--plm_name', default='hyunwoongko/kobart')
-    parser.add_argument('--max_input_length', type=int, default=512)
     # parser.add_argument('--bos_at_front', action='store_true')
     # parser.add_argument('--valid_ratio', type=float, default=0.2)
     # parser.add_argument('--valid_batch_size', type=int, default=32)
