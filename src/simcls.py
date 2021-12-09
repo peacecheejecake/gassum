@@ -240,8 +240,10 @@ def train_epoch(
 def validate_epoch(config, encoder, dataloader, *, quiet=False):
     data = dataloader.dataset.data
     candidates_all = data['candidates']
+
     batch_size = config.valid_batch_size
     num_cands = len(eval(candidates_all[0])) # assume the same `num_cands` in every sample`
+    embedding_size = encoder.config.embedding_size
 
     encoder.eval()
     best_cands = []
@@ -253,15 +255,12 @@ def validate_epoch(config, encoder, dataloader, *, quiet=False):
         doc_embeddings = (
             encoder(**docs)[0][:, 0, :]
             .repeat_interleave(num_cands, dim=0)
-            .view(batch_size, num_cands, -1)
+            .view(-1, num_cands, embedding_size)
         )
-        try:
-            cand_embeddings = (
-                encoder(**cands)[0][:, 0, :]
-                .view(batch_size, num_cands, -1)
-            )
-        except RuntimeError:
-            print(encoder(**cands)[0][:, 0, :].shape, batch_size * num_cands)
+        cand_embeddings = (
+            encoder(**cands)[0][:, 0, :]
+            .view(-1, num_cands, embedding_size)
+        )
         scores = torch.cosine_similarity(doc_embeddings, cand_embeddings, dim=-1)
         best_cand_indices = scores.argmax(-1).tolist()
         cand_lists = candidates_all.iloc[batch_size * step: batch_size * (step + 1)]
@@ -290,8 +289,10 @@ def evaluate(config, device):
 
     data = dataloader.dataset.data
     candidates_all = data['candidates']
+
     batch_size = config.valid_batch_size
     num_cands = len(eval(candidates_all[0])) # assume the same `num_cands` in every sample`
+    embedding_size = encoder.config.embedding_size
 
     start_time = datetime.now()
     predictions = []
@@ -300,11 +301,11 @@ def evaluate(config, device):
         doc_embeddings = (
             encoder(**docs)[0][:, 0, :]
             .repeat_interleave(num_cands, dim=0)
-            .view(batch_size, num_cands, -1)
+            .view(-1, num_cands, embedding_size)
         )
         cand_embeddings = (
             encoder(**cands)[0][:, 0, :]
-            .view(batch_size, num_cands, -1)
+            .view(-1, num_cands, embedding_size)
         )
         scores = torch.cosine_similarity(doc_embeddings, cand_embeddings, dim=-1)
         best_cand_indices = scores.argmax(-1).tolist()
