@@ -87,7 +87,9 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, required=True)
     parser.add_argument('--bart_name', default='hyunwoongko/kobart')
     parser.add_argument('--train', action='store_true')
+    parser.add_argument('--train_law', action='store_true')
     parser.add_argument('--valid', action='store_true')
+    parser.add_argument('--valid_law', action='store_true')
     parser.add_argument('--eval', action='store_true')
     
     add_arguments_for_training(parser)
@@ -114,10 +116,22 @@ if __name__ == '__main__':
             pd.read_csv('/content/drive/MyDrive/gassum/data/train_original.csv'),
             True,
         ))
+    if args.train_law:
+        originals.append((
+            f'train_law_w_cands_{args.num_cands}.csv', 
+            pd.read_csv('/content/drive/MyDrive/gassum/data/train_law_original.csv'),
+            True,
+        ))
     if args.valid:
         originals.append((
             f'valid_w_cands_{args.num_cands}.csv', 
             pd.read_csv('/content/drive/MyDrive/gassum/data/valid_original.csv'),
+            True,
+        ))
+    if args.valid_law:
+        originals.append((
+            f'valid_law_w_cands_{args.num_cands}.csv', 
+            pd.read_csv('/content/drive/MyDrive/gassum/data/valid_law_original.csv'),
             True,
         ))
     if args.eval:
