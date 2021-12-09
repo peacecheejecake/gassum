@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, BartForConditionalGeneration, BartConfig
 from rouge import Rouge
 
-from dataset import KobartLabeledDataset
+from dataset import KobartEvalDataset, KobartLabeledDataset
 from utils import (
     add_arguments_for_generation,
     add_arguments_for_training,
@@ -31,7 +31,10 @@ def build_candidates(config, data, device, *, labeled):
     rouge = Rouge()
     tokenizer = AutoTokenizer.from_pretrained('hyunwoongko/kobart')
 
-    dataset = KobartLabeledDataset(config, data, tokenizer, for_train=False)
+    dataset = (
+        KobartLabeledDataset(config, data, tokenizer, for_train=False) if labeled
+        else KobartEvalDataset(config, data, tokenizer)
+    )
     dataloader = DataLoader(
         dataset, 
         batch_size=config.batch_size, 

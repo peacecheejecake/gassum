@@ -268,7 +268,7 @@ class KobartEvalDataset(_DatasetBase):
         )
 
     def __getitem__(self, idx):
-        context = self.data.iloc[idx]['article']
+        context = self.data.iloc[idx]['text']
         context_tokens = self.tokenizer.tokenize(preprocess(context))[:self.max_seq_length]
         return context_tokens
 
