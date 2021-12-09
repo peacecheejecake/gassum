@@ -1,6 +1,8 @@
 import os
 import argparse
 import logging
+import pandas as pd
+
 from torch.optim import lr_scheduler
 from transformers import BartTokenizerFast, BartForConditionalGeneration, BartConfig
 import torch
@@ -29,7 +31,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp_name')
     parser.add_argument('--base_dir', required=True)
-    parser.add_argument('--data_file', required=True)
+    parser.add_argument('--train_data', required=True)
+    parser.add_argument('--valid_data', required=True)
     parser.add_argument('--plm_name', default='hyunwoongko/kobart')
     parser.add_argument('--checkpoints', nargs='+', default='')
     parser.add_argument('--fill_valid', action='store_true')
@@ -81,25 +84,28 @@ if __name__ == '__main__':
     model_config = BartConfig.from_pretrained(args.plm_name)
     setattr(tokenizer, 'decoder_start_token_id', model_config.decoder_start_token_id)
 
-    train_data_path = f"{data_dir}/{args.data_file}"
-    if args.num_folds > 1:
-        data_all, train_indices, valid_indices = prepare_kfold_indices(
-            train_data_path, 
-            args.num_folds, 
-            shuffle=False,
-            ignore_nan=True,
-        )
-    else:
-        train_data, valid_data = prepare_train_data(
-            train_data_path, 
-            args.valid_ratio, 
-            random_split=True, 
-            ignore_nan=True,
-        )
+    # train_data_path = f"{data_dir}/{args.data_file}"
+    # if args.num_folds > 1:
+    #     data_all, train_indices, valid_indices = prepare_kfold_indices(
+    #         train_data_path, 
+    #         args.num_folds, 
+    #         shuffle=False,
+    #         ignore_nan=True,
+    #     )
+    # else:
+    #     train_data, valid_data = prepare_train_data(
+    #         train_data_path, 
+    #         args.valid_ratio, 
+    #         random_split=True, 
+    #         ignore_nan=True,
+    #     )
+
+    train_data = pd.read_csv(os.path.join(args.data_dir, args.train_data))
+    valid_data = pd.read_csv(os.path.join(args.data_dir, args.valid_data))
 
     # start of folds
     for fold in range(args.num_folds):
-        if args.num_folds > 1:
+        if args.num_folds > 1: # TODO
             train_data = data_all.iloc[train_indices[fold]]
             valid_data = data_all.iloc[valid_indices[fold]]
 
