@@ -99,7 +99,7 @@ class Launcher:
             )
 
     def load_start(self, config, device):
-        self.lencoder = AutoModel.from_pretrained(config.encoder_name).to(device)
+        self.encoder = AutoModel.from_pretrained(config.encoder_name).to(device)
         
         if config.mode == 'train':
             self.optimizer = init_optimizer(config, self.encoder)
