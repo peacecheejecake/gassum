@@ -229,8 +229,7 @@ class Launcher:
     def evaluate(self, config, return_path=False):
         self.encoder.eval()
 
-        data = dataloader.dataset.data
-        candidates_all = data['candidates']
+        candidates_all = self.eval_data['candidates']
 
         batch_size = config.valid_batch_size
         num_cands = len(eval(candidates_all[0])) # assume the same `num_cands` in every sample`
