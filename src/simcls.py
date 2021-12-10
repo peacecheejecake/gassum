@@ -93,7 +93,7 @@ class Launcher:
                 setattr(
                     self, 
                     f'{mode}_loader',
-                    self.data_loader(config, getattr(self, f'{mode}_data'), self.tokenizer, mode == 'train'),
+                    self.data_loader(config, getattr(self, f'{mode}_data'), mode == 'train'),
                 )
 
     def load_start(self, config, device):
