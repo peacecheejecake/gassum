@@ -96,7 +96,7 @@ class Launcher:
                     self.data_loader(
                         config=config, 
                         data=getattr(self, f'{mode}_data'), 
-                        batch_size=getattr(config, f'{mode}_batch_size'),
+                        batch_size=getattr(config, f'{"valid" if mode != "train" else "train"}_batch_size'),
                         require_golds=(mode == 'train'),
                     ),
                 )
