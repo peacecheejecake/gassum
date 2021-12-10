@@ -66,11 +66,11 @@ class Launcher:
             raise NotImplementedError
         return data
     
-    def data_loader(self, config, data, require_golds):
+    def data_loader(self, config, data, *, batch_size, require_golds):
         dataset = DatasetForReranker(config, data, self.tokenizer, require_golds=require_golds)
         return DataLoader(
             dataset, 
-            batch_size=config.train_batch_size, 
+            batch_size=batch_size, 
             collate_fn=lambda b: dataset.collate(b, device)
         )
 
@@ -93,7 +93,12 @@ class Launcher:
                 setattr(
                     self, 
                     f'{mode}_loader',
-                    self.data_loader(config, getattr(self, f'{mode}_data'), mode == 'train'),
+                    self.data_loader(
+                        config=config, 
+                        data=getattr(self, f'{mode}_data'), 
+                        batch_size=getattr(config, f'{mode}_batch_size'),
+                        require_golds=(mode == 'train'),
+                    ),
                 )
 
     def load_start(self, config, device):
