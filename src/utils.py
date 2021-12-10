@@ -174,32 +174,39 @@ def sync_batch_idx(start_epoch, dataloader, sync_wandb=False, org_bsz=None):
     '''
         Compatible only if `epoch * data_size` is divisible of `tgt_bsz`
     '''
-    if sync_wandb:
-        for epoch in range(start_epoch):
+
+    for epoch in range(start_epoch):
+        if sync_wandb:
             wandb.log({'epoch': epoch}) # dummy to continue right after last epoch
-
-    tgt_bsz = dataloader.batch_size
-    if org_bsz is None:
-        org_bsz = tgt_bsz
-
-    class DummyDataset(Dataset):
-        def __init__(self):
-            self._arr = torch.arange(self.__len__())
-
-        def __len__(self):
-            return len(dataloader.dataset)
-
-        def __getitem__(self, index):
-            return self._arr[index]
-
-    dummy_loader = DataLoader(
-        DummyDataset(),
-        batch_size=org_bsz,
-        sampler=dataloader.sampler,
-    )
-    for _ in range(start_epoch):
-        for _ in dummy_loader:
+        for _ in dataloader:
             pass
+
+    # if sync_wandb:
+    #     for epoch in range(start_epoch):
+    #         wandb.log({'epoch': epoch}) # dummy to continue right after last epoch
+
+    # tgt_bsz = dataloader.batch_size
+    # if org_bsz is None:
+    #     org_bsz = tgt_bsz
+
+    # class DummyDataset(Dataset):
+    #     def __init__(self):
+    #         self._arr = torch.arange(self.__len__())
+
+    #     def __len__(self):
+    #         return len(dataloader.dataset)
+
+    #     def __getitem__(self, index):
+    #         return self._arr[index]
+
+    # dummy_loader = DataLoader(
+    #     DummyDataset(),
+    #     batch_size=org_bsz,
+    #     sampler=dataloader.sampler,
+    # )
+    # for _ in range(start_epoch):
+    #     for _ in dummy_loader:
+    #         pass
     # last_batch_idx = start_epoch * len(dataloader.dataset)
     # batch_idx = 0
     # while True:

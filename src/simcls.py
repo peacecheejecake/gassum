@@ -351,7 +351,6 @@ if __name__ == '__main__':
     parser.add_argument('--valid_data')
     parser.add_argument('--eval_data')
     parser.add_argument('--mode', default='train')
-    # parser.add_argument('--tapt')
     parser.add_argument('--checkpoint')
     parser.add_argument('--encoder_name', default='kykim/electra-kor-base')
 
