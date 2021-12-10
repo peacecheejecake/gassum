@@ -1,7 +1,9 @@
 import argparse
 import logging
 import os
+from os import PathLike
 from datetime import datetime
+from typing import Union
 
 import pandas as pd
 
@@ -35,171 +37,235 @@ from utils import (
     save_checkpoint,
 )
 from dataset import DatasetForReranker
-from info import WANDB_AUTH_KEY, WANDB_PROJECT, WANDB_ENTITY
 
 
-def train(config, device):
-    if config.wandb:
-        wandb.login(key=WANDB_AUTH_KEY)
-        wandb_run = wandb.init(
-            project=WANDB_PROJECT, 
-            entity=WANDB_ENTITY, 
+class Launcher:
+
+    from info import WANDB_AUTH_KEY, WANDB_PROJECT, WANDB_ENTITY
+
+    def __init__(self, config):
+        self.prepare_data(config)
+        if config.wandb:
+            self.init_wandb(config)
+        self.load_start(config)
+
+    def init_wandb(self, config):
+        wandb.login(key=Launcher.WANDB_AUTH_KEY)
+        self.wandb_run = wandb.init(
+            project=Launcher.WANDB_PROJECT, 
+            entity=Launcher.WANDB_ENTITY, 
             config=config, 
             name=config.exp_name,
         )
 
-    encoder = AutoModel.from_pretrained(config.encoder_name).to(device)
-    tokenizer = AutoTokenizer.from_pretrained(config.encoder_name)
-
-    train_data = pd.read_csv(os.path.join(config.data_dir, config.train_data))
-    if config.valid_data:
-        valid_data = pd.read_csv(os.path.join(config.data_dir, config.valid_data))
-    elif config.train_data:
-        train_data, valid_data = split_train_valid(train_data, config.valid_ratio, shuffle=True)
-
-    train_dataset = DatasetForReranker(config, train_data, tokenizer, require_golds=True)
-    train_loader = DataLoader(
-        train_dataset, 
-        batch_size=config.train_batch_size, 
-        collate_fn=lambda b: train_dataset.collate(b, device)
-    )
-
-    valid_dataset = DatasetForReranker(config, valid_data, tokenizer, require_golds=False)
-    valid_loader = DataLoader(
-        valid_dataset, 
-        batch_size=config.valid_batch_size, 
-        collate_fn=lambda b: valid_dataset.collate(b, device)
-    )
-
-    optimizer = init_optimizer(config, encoder)
-    lr_scheduler = init_lr_scheduler(config, optimizer, len(train_loader))
-    criterion = SimCLSRerankCriterion(encoder)
-
-    history = {
-        'epoch': 0, 
-        'rouge': {'rouge-1': 0, 'rouge-2': 0, 'rouge-l': 0},
-        'best_rouge': {'rouge-1': 0, 'rouge-2': 0, 'rouge-l': 0},
-        'stop_count': 0
-    }
-    start_epoch = 0
-    if config.checkpoint is not None:
-        if os.path.exists(config.checkpoint):
-            checkpoint = torch.load(config.checkpoint, map_location=device)
-            encoder.load_state_dict(checkpoint['model'])
-            optimizer.load_state_dict(checkpoint['optimizer'])
-            lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
-            start_epoch = checkpoint['epoch']
-            history = checkpoint['history']
-            
-            for epoch in range(start_epoch):
-                if config.wandb:
-                    wandb_run.log({'epoch': epoch})
-                for _ in train_loader:
-                    pass
-
-            print(history)
+    def read_data(self, data_dir, data_name):
+        path = os.path.join(data_dir, data_name)
+        _, ext = data_name.rsplit('.', 1)
+        if ext == 'csv':
+            data = pd.read_csv(path)
+        elif ext =='json':
+            data = pd.read_csv(path)
         else:
-            logging.warn('No checkpoint file exists.')
+            raise NotImplementedError
+        return data
 
-    print_train_info(
-        start_epoch, 
-        config.num_epochs, 
-        device.type, 
-        criterion.model, 
-        optimizer, 
-        lr_scheduler, 
-        criterion,
-        len(train_loader.dataset), 
-        len(valid_loader.dataset),
-    )
-    
-    encoder.to(device)
-    best_model_path = None
-    for epoch in range(start_epoch, config.num_epochs):
-        if history['stop_count'] > config.patience:
-            break
+    def prepare_data(self, config):
+        self.tokenizer = AutoTokenizer.from_pretrained(config.encoder_name)
 
-        epoch_loss = train_epoch(
-            config=config,
-            criterion=criterion,
-            dataloader=train_loader,
-            optimizer=optimizer,
-            lr_scheduler=lr_scheduler,
-            epoch=epoch,
-            device=device,
-        )
-        epoch_score = validate_epoch(config, encoder, valid_loader, quiet=True)
-
-        if sum(epoch_score.values()) > sum(history['best_rouge'].values()):
-            history['best_rouge'] = epoch_score
-            history['stop_count'] = 0
-            is_best_model = True
-        else:
-            history['stop_count'] += 1
-            is_best_model = False
+        if config.train_data and config.valid_data:
+            self.train_data = self.read_data(config.data_dir, config.train_data)
+            self.valid_data = self.read_data(config.data_dir, config.valid_data)
+        elif config.train_data:
+            self.train_data, self.valid_data = split_train_valid(config.train_data, config.valid_ratio, shuffle=True)
+        elif config.valid_data:
+            self.valid_data = self.read_data(config.data_dir, config.valid_data)
         
-        history['epoch'] = epoch + 1
-        history['rouge'] = epoch_score
+        if config.eval_data:
+            self.eval_data = self.read_data(config.data_dir, config.eval_data)
 
-        if not config.off_saving:
-            checkpoint_name = f"{config.exp_name}-{epoch}"
-            if is_best_model:
-                checkpoint_path = f"{config.checkpoint_dir}/{checkpoint_name}-best.pth"
-                best_model_path = checkpoint_path
-            else:
-                checkpoint_path = f"{config.checkpoint_dir}/{checkpoint_name}.pth"
-            save_checkpoint(
-                epoch=epoch + 1, 
-                model=encoder, 
-                optimizer=optimizer, 
-                lr_scheduler=lr_scheduler, 
-                history=history, 
-                path=checkpoint_path,
+        if hasattr(self, 'train_data'):
+            train_dataset = DatasetForReranker(config, self.train_data, self.tokenizer, require_golds=True)
+            self.train_loader = DataLoader(
+                train_dataset, 
+                batch_size=config.train_batch_size, 
+                collate_fn=lambda b: train_dataset.collate(b, device)
+            )
+        if hasattr(self, 'valid_data'):
+            valid_dataset = DatasetForReranker(config, self.valid_data, self.tokenizer, require_golds=False)
+            self.valid_loader = DataLoader(
+                valid_dataset, 
+                batch_size=config.valid_batch_size, 
+                collate_fn=lambda b: valid_dataset.collate(b, device)
             )
 
-        if config.wandb:
-            wandb_run.log({
-                'epoch': epoch + 1,
-                'train_loss': epoch_loss, 
-                'lr': lr_scheduler.get_last_lr(), 
-                **epoch_score,
-                'rouge_sum': sum(epoch_score.values()),
-                **{f"best_{key}": val for key, val in history['best_rouge'].items()},
-                'best_rouge_sum': sum(history['best_rouge'].values()),
-            })
+    def load_start(self, config, device):
+        self.lencoder = AutoModel.from_pretrained(config.encoder_name).to(device)
         
-        for key, value in epoch_score.items():
-            print(f"({key}) {value:.5f}", end=' ')
-        print(f"(stop count) {history['stop_count']}")
-    
-    print(
-        f"""
-            [Best Model]
-            - Epoch: {history['epoch'] - history['stop_count']}
-            - Rouge-1: {history['best_rouge']['rouge-1']}
-            - Rouge-2: {history['best_rouge']['rouge-2']}
-            - Rouge-l: {history['best_rouge']['rouge-l']}
-            - Saved at: {best_model_path if best_model_path is not None else "Unspecified"}
-        """
-    )
+        if config.mode == 'train':
+            self.optimizer = init_optimizer(config, self.encoder)
+            self.lr_scheduler = init_lr_scheduler(config, self.optimizer, len(self.train_loader))
+            self.criterion = SimCLSRerankCriterion(self.encoder)
+            self.history = {
+                'epoch': 0, 
+                'rouge': {'rouge-1': 0, 'rouge-2': 0, 'rouge-l': 0},
+                'best_rouge': {'rouge-1': 0, 'rouge-2': 0, 'rouge-l': 0},
+                'stop_count': 0
+            }
+        
+        if config.checkpoint is not None:
+            if os.path.exists(config.checkpoint):
+                checkpoint = torch.load(config.checkpoint, map_location=device)
+                self.encoder.load_state_dict(checkpoint['model'])
+                if config.mode == 'train':
+                    self.optimizer.load_state_dict(checkpoint['optimizer'])
+                    self.lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+                    self.start_epoch = checkpoint['epoch']
+                    self.history = checkpoint['history']
+                
+                    for epoch in range(self.history['epoch']):
+                        if config.wandb:
+                            self.wandb_run.log({'epoch': epoch})
+                        for _ in self.train_loader:
+                            pass
 
+                print(self.history)
+            else:
+                logging.warn('No checkpoint file exists.')
+    
 
-def validate(config, device):
-    tokenizer = AutoTokenizer.from_pretrained(config.encoder_name)
-    if config.valid_data:
-        data = pd.read_csv(os.path.join(config.data_dir, config.valid_data))
-    elif config.train_data:
-        train_data = pd.read_csv(os.path.join(config.data_dir, config.train_data))
-        _, data = split_train_valid(train_data, config.valid_ratio, shuffle=True)
-    dataset = DatasetForReranker(config, data, tokenizer)
-    dataloader = DataLoader(dataset, config.valid_batch_size, collate_fn=lambda b: dataset.collate(b, device))
+    def train(self, config, device, return_path=False):
+        history = self.load_encoder(config.checkpoint)
+
+        print_train_info(
+            self.history['epoch'], 
+            config.num_epochs, 
+            device.type, 
+            self.criterion.model, 
+            self.optimizer, 
+            self.lr_scheduler, 
+            self.criterion,
+            len(self.train_loader.dataset), 
+            len(self.valid_loader.dataset),
+        )
+        
+        best_model_path = None
+        for epoch in range(self.history['epoch'], config.num_epochs):
+            if history['stop_count'] > config.patience:
+                break
+
+            epoch_loss = train_epoch(
+                config=config,
+                criterion=self.criterion,
+                dataloader=self.train_loader,
+                optimizer=self.optimizer,
+                lr_scheduler=self.lr_scheduler,
+                epoch=epoch,
+            )
+            epoch_score = validate_epoch(config, self.encoder, self.valid_loader, quiet=True)
+
+            if sum(epoch_score.values()) > sum(history['best_rouge'].values()):
+                history['best_rouge'] = epoch_score
+                history['stop_count'] = 0
+                is_best_model = True
+            else:
+                history['stop_count'] += 1
+                is_best_model = False
+            
+            history['epoch'] = epoch + 1
+            history['rouge'] = epoch_score
+
+            if not config.off_saving:
+                checkpoint_name = f"{config.exp_name}-{epoch}"
+                if is_best_model:
+                    checkpoint_path = f"{config.checkpoint_dir}/{checkpoint_name}-best.pth"
+                    best_model_path = checkpoint_path
+                else:
+                    checkpoint_path = f"{config.checkpoint_dir}/{checkpoint_name}.pth"
+                save_checkpoint(
+                    epoch=epoch + 1, 
+                    model=self.encoder, 
+                    optimizer=self.optimizer, 
+                    lr_scheduler=self.lr_scheduler, 
+                    history=history, 
+                    path=checkpoint_path,
+                )
+
+            if config.wandb:
+                self.wandb_run.log({
+                    'epoch': epoch + 1,
+                    'train_loss': epoch_loss, 
+                    'lr': self.lr_scheduler.get_last_lr(), 
+                    **epoch_score,
+                    'rouge_sum': sum(epoch_score.values()),
+                    **{f"best_{key}": val for key, val in history['best_rouge'].items()},
+                    'best_rouge_sum': sum(history['best_rouge'].values()),
+                })
+            
+            for key, value in epoch_score.items():
+                print(f"({key}) {value:.5f}", end=' ')
+            print(f"(stop count) {history['stop_count']}")
+        
+        print(
+            f"""
+                [Best Model]
+                - Epoch: {history['epoch'] - history['stop_count']}
+                - Rouge-1: {history['best_rouge']['rouge-1']}
+                - Rouge-2: {history['best_rouge']['rouge-2']}
+                - Rouge-l: {history['best_rouge']['rouge-l']}
+                - Saved at: {best_model_path if best_model_path is not None else "Unspecified"}
+            """
+        )
+
+        if return_path:
+            return history, best_model_path
+        return history
+
+    def validate(self, config):
+        rouge_score = validate_epoch(config, self.encoder, self.valid_loader)
+        print(rouge_score)
+        return rouge_score
     
-    encoder = AutoModel.from_pretrained(config.encoder_name)
-    if config.checkpoint and os.path.exists(config.checkpoint):
-        encoder.load_state_dict(torch.load(config.checkpoint)['model'])
-    encoder.to(device)
-    
-    print(validate_epoch(config, encoder, dataloader))
+    @torch.no_grad()
+    def evaluate(self, config, return_path=False):
+        self.encoder.eval()
+
+        data = dataloader.dataset.data
+        candidates_all = data['candidates']
+
+        batch_size = config.valid_batch_size
+        num_cands = len(eval(candidates_all[0])) # assume the same `num_cands` in every sample`
+        embedding_size = self.encoder.config.embedding_size
+
+        start_time = datetime.now()
+        predictions = []
+        for step, (docs, cands) in enumerate(dataloader):
+            print_simple_progress(step, total_steps=len(dataloader), start_time=start_time)
+            doc_embeddings = (
+                self.encoder(**docs)[0][:, 0, :]
+                .repeat_interleave(num_cands, dim=0)
+                .view(-1, num_cands, embedding_size)
+            )
+            cand_embeddings = (
+                self.encoder(**cands)[0][:, 0, :]
+                .view(-1, num_cands, embedding_size)
+            )
+            scores = torch.cosine_similarity(doc_embeddings, cand_embeddings, dim=-1)
+            best_cand_indices = scores.argmax(-1).tolist()
+            cand_lists = candidates_all.iloc[batch_size * step: batch_size * (step + 1)]
+            predictions.extend(
+                eval(cand_list)[idx] 
+                for cand_list, idx in zip(cand_lists, best_cand_indices)
+            )
+        
+        submission = pd.read_csv(os.path.join(config.data_dir, 'new_sample_submission.csv'))
+        submission['summary'] = predictions
+        submission_path = f"{config.submission_dir}/submission {datetime.now()}.csv"
+        submission.to_csv(submission_path, index=False)
+        print(f"\nSubmission file created: {submission_path}")
+        
+        if return_path:
+            return submission, submission_path
+        return submission
 
 
 def train_epoch(
@@ -210,13 +276,9 @@ def train_epoch(
     lr_scheduler, 
     *,
     epoch=None, 
-    device=None, 
 ):
-    torch.cuda.empty_cache()
-
-    if device is not None:
-        criterion.model.to(device)
     criterion.model.train()
+    torch.cuda.empty_cache()
 
     epoch_loss = 0
     epoch = epoch if epoch is not None else -1
@@ -279,58 +341,6 @@ def validate_epoch(config, encoder, dataloader, *, quiet=False):
     return rouge_score
 
 
-@torch.no_grad()
-def evaluate(config, device):
-    tokenizer = AutoTokenizer.from_pretrained(config.encoder_name)
-    data = pd.read_csv(os.path.join(config.data_dir, config.eval_data))
-    dataset = DatasetForReranker(config, data, tokenizer)
-    dataloader = DataLoader(
-        dataset, 
-        batch_size=config.valid_batch_size, 
-        collate_fn=lambda b: dataset.collate(b, device)
-    )
-
-    encoder = AutoModel.from_pretrained(config.encoder_name)
-    if config.checkpoint is not None:
-        encoder.load_state_dict(torch.load(config.checkpoint)['model'])
-    encoder.to(device)
-    encoder.eval()
-
-    data = dataloader.dataset.data
-    candidates_all = data['candidates']
-
-    batch_size = config.valid_batch_size
-    num_cands = len(eval(candidates_all[0])) # assume the same `num_cands` in every sample`
-    embedding_size = encoder.config.embedding_size
-
-    start_time = datetime.now()
-    predictions = []
-    for step, (docs, cands) in enumerate(dataloader):
-        print_simple_progress(step, total_steps=len(dataloader), start_time=start_time)
-        doc_embeddings = (
-            encoder(**docs)[0][:, 0, :]
-            .repeat_interleave(num_cands, dim=0)
-            .view(-1, num_cands, embedding_size)
-        )
-        cand_embeddings = (
-            encoder(**cands)[0][:, 0, :]
-            .view(-1, num_cands, embedding_size)
-        )
-        scores = torch.cosine_similarity(doc_embeddings, cand_embeddings, dim=-1)
-        best_cand_indices = scores.argmax(-1).tolist()
-        cand_lists = candidates_all.iloc[batch_size * step: batch_size * (step + 1)]
-        predictions.extend(
-            eval(cand_list)[idx] 
-            for cand_list, idx in zip(cand_lists, best_cand_indices)
-        )
-    
-    submission = pd.read_csv(os.path.join(config.data_dir, 'new_sample_submission.csv'))
-    submission['summary'] = predictions
-    submission_path = f"{config.submission_dir}/submission {datetime.now()}.csv"
-    submission.to_csv(submission_path, index=False)
-    print(f"\nSubmission file created: {submission_path}")
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--base_dir', required=True)
@@ -365,14 +375,16 @@ if __name__ == '__main__':
     args.exp_name = args.exp_name if args.exp_name is not None else generate_random_name(prefix="kobart-simcls")
     set_manual_seed_all(args.seed)
 
+    launcher = Launcher(args)
+
     if args.mode == 'train':
         assert args.train_data and (args.valid_data or args.valid_ratio)
-        train(args, device)
+        launcher.train(args, device)
     elif args.mode == 'eval':
         assert args.eval_data
-        evaluate(args, device)
+        launcher.evaluate(args, device)
     elif args.mode == 'valid':
         assert args.valid_data or args.train_data and args.valid_ratio
-        validate(args, device)
+        launcher.validate(args, device)
     else:
         raise NameError
