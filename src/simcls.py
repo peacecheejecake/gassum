@@ -1,16 +1,13 @@
 import argparse
 import logging
 import os
-from os import PathLike
 from datetime import datetime
-from typing import Union
 
 import pandas as pd
 
 import torch
 import torch.nn as nn
-from torch.utils.data import dataloader
-from torch.utils.data.dataloader import DataLoader
+from torch.utils.data import DataLoader
 
 from transformers import (
     AutoTokenizer, 
@@ -68,6 +65,14 @@ class Launcher:
         else:
             raise NotImplementedError
         return data
+    
+    def data_loader(self, config, data, require_golds):
+        dataset = DatasetForReranker(config, data, self.tokenizer, require_golds=require_golds)
+        return DataLoader(
+            dataset, 
+            batch_size=config.train_batch_size, 
+            collate_fn=lambda b: dataset.collate(b, device)
+        )
 
     def prepare_data(self, config):
         self.tokenizer = AutoTokenizer.from_pretrained(config.encoder_name)
@@ -83,20 +88,13 @@ class Launcher:
         if config.eval_data:
             self.eval_data = self.read_data(config.data_dir, config.eval_data)
 
-        if hasattr(self, 'train_data'):
-            train_dataset = DatasetForReranker(config, self.train_data, self.tokenizer, require_golds=True)
-            self.train_loader = DataLoader(
-                train_dataset, 
-                batch_size=config.train_batch_size, 
-                collate_fn=lambda b: train_dataset.collate(b, device)
-            )
-        if hasattr(self, 'valid_data'):
-            valid_dataset = DatasetForReranker(config, self.valid_data, self.tokenizer, require_golds=False)
-            self.valid_loader = DataLoader(
-                valid_dataset, 
-                batch_size=config.valid_batch_size, 
-                collate_fn=lambda b: valid_dataset.collate(b, device)
-            )
+        for mode in ('train', 'valid', 'eval'):
+            if hasattr(self, f'{mode}_data'):
+                setattr(
+                    self, 
+                    f'{mode}_loader',
+                    self.data_loader(config, getattr(self, f'{mode}_data'), self.tokenizer, mode == 'train'),
+                )
 
     def load_start(self, config, device):
         self.encoder = AutoModel.from_pretrained(config.encoder_name).to(device)
@@ -237,8 +235,8 @@ class Launcher:
 
         start_time = datetime.now()
         predictions = []
-        for step, (docs, cands) in enumerate(dataloader):
-            print_simple_progress(step, total_steps=len(dataloader), start_time=start_time)
+        for step, (docs, cands) in enumerate(self.eval_loader):
+            print_simple_progress(step, total_steps=len(self.eval_loader), start_time=start_time)
             doc_embeddings = (
                 self.encoder(**docs)[0][:, 0, :]
                 .repeat_interleave(num_cands, dim=0)
