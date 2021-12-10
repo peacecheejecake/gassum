@@ -128,7 +128,7 @@ class Launcher:
                         for _ in self.train_loader:
                             pass
 
-                print(self.history)
+                    print(self.history)
             else:
                 logging.warn('No checkpoint file exists.')
     
