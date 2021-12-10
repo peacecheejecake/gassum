@@ -48,7 +48,7 @@ def train(config, device):
             name=config.exp_name,
         )
 
-    encoder = AutoModel.from_pretrained(config.encoder_name)
+    encoder = AutoModel.from_pretrained(config.encoder_name).to(device)
     tokenizer = AutoTokenizer.from_pretrained(config.encoder_name)
 
     train_data = pd.read_csv(os.path.join(config.data_dir, config.train_data))
