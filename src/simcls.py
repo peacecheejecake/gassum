@@ -43,11 +43,11 @@ class Launcher:
 
     from info import WANDB_AUTH_KEY, WANDB_PROJECT, WANDB_ENTITY
 
-    def __init__(self, config):
+    def __init__(self, config, device):
         self.prepare_data(config)
         if config.wandb:
             self.init_wandb(config)
-        self.load_start(config)
+        self.load_start(config, device)
 
     def init_wandb(self, config):
         wandb.login(key=Launcher.WANDB_AUTH_KEY)
@@ -375,7 +375,7 @@ if __name__ == '__main__':
     args.exp_name = args.exp_name if args.exp_name is not None else generate_random_name(prefix="kobart-simcls")
     set_manual_seed_all(args.seed)
 
-    launcher = Launcher(args)
+    launcher = Launcher(args, device)
 
     if args.mode == 'train':
         assert args.train_data and (args.valid_data or args.valid_ratio)
