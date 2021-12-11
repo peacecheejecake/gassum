@@ -143,10 +143,13 @@ if __name__ == '__main__':
         if args.checkpoints and args.checkpoints[fold]:
             # checkpoint = torch.load(f"{checkpoint_dir}/{args.checkpoints[fold]}.pth")
             checkpoint = torch.load(args.checkpoints[fold], map_location=model.device)
-            model.load_state_dict(checkpoint['model'])
-            optimizer.load_state_dict(checkpoint['optimizer'])
-            lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
-            history = checkpoint['history']
+            if checkpoint.get('model') is not None:
+                model.load_state_dict(checkpoint['model'])
+                optimizer.load_state_dict(checkpoint['optimizer'])
+                lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+                history = checkpoint['history']
+            else:
+                model.load_state_dict(checkpoint)
 
         start_epoch = history['epoch']
         sync_batch_idx(start_epoch, train_loader)
