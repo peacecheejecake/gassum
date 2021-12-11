@@ -76,7 +76,8 @@ if __name__ == '__main__':
         if len(args.checkpoints) != args.num_folds:
             raise ValueError('The number of checkpoints and num of folds are different.')
         for fold, checkpoint in enumerate(args.checkpoints):
-            if checkpoint and not os.path.exists(f'{checkpoint_dir}/{checkpoint}.pth'):
+            # if checkpoint and not os.path.exists(f'{checkpoint_dir}/{checkpoint}.pth'):
+            if checkpoint and not os.path.exists(checkpoint):
                 raise ValueError(f'Checkpoint at fold {fold} does not exist.')
 
     # tokenizer, splitted data/indices
@@ -140,7 +141,8 @@ if __name__ == '__main__':
         lr_scheduler = init_lr_scheduler(args, optimizer, len(train_loader))
 
         if args.checkpoints and args.checkpoints[fold]:
-            checkpoint = torch.load(f"{checkpoint_dir}/{args.checkpoints[fold]}.pth")
+            # checkpoint = torch.load(f"{checkpoint_dir}/{args.checkpoints[fold]}.pth")
+            checkpoint = torch.load(args.checkpoints[fold], map_location=model.device)
             model.load_state_dict(checkpoint['model'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
