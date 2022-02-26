@@ -290,8 +290,10 @@ def train():
 
     # train_data = load_data_from_json(os.path.join(config.data_dir, 'train_original.json'))
     # valid_data = load_data_from_json(os.path.join(config.data_dir, 'valid_original.json'))
-    train_data = pd.read_csv(os.path.join(config.data_dir, config.train_data))
-    valid_data = pd.read_csv(os.path.join(config.data_dir, config.valid_data))
+#     train_data = pd.read_csv(os.path.join(config.data_dir, config.train_data))
+#     valid_data = pd.read_csv(os.path.join(config.data_dir, config.valid_data))
+    train_data = pd.read_json(os.path.join(config.data_dir, config.train_data))
+    valid_data = pd.read_json(os.path.join(config.data_dir, config.valid_data))
     train_loader, valid_loader = prepare_data_loaders(
         config,
         train_data, 
