@@ -201,6 +201,8 @@ def validate_epoch(config, model, dataloader, evaluator=None, epoch=None, wandb_
     }
     if not quiet:
         print(f'\n{rouge_score}')
+        with open('/content/drive/MyDrive/music-bot/tmp_pred_{np.random.randint(100)}.json', 'w') as f:
+            json.dump({r: p for r, p in zip(references, predictions)}, f)
     return rouge_score
 
 
