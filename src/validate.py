@@ -202,9 +202,9 @@ def validate_epoch(config, model, dataloader, evaluator=None, epoch=None, wandb_
     }
     if not quiet:
         print(f'\n{rouge_score}')
-        with open('/content/drive/MyDrive/music-bot/tmp_pred_{np.random.randint(100)}.json', 'w') as f:
-            json.dump({r: p for r, p in zip(references, predictions)}, f)
-    return rouge_score
+        
+#     return rouge_score
+    return predictions
 
 
 if __name__ == '__main__':
@@ -251,6 +251,7 @@ if __name__ == '__main__':
     # valid_data = load_data_from_json(os.path.join(data_dir, 'valid_original.json'))
 #     valid_data = pd.read_csv(os.path.join(data_dir, args.valid_data))
     valid_data = pd.read_json(os.path.join(data_dir, args.valid_data))
+    print(f"Valid Data Size: {len(valid_data)}")
     valid_dataset = KobartLabeledDataset(args, valid_data, tokenizer, for_train=False)
     valid_loader = DataLoader(
         valid_dataset, 
@@ -258,5 +259,8 @@ if __name__ == '__main__':
         collate_fn=lambda b: valid_dataset.collate(b, device),
     )
 
-    result = validate_epoch(args, model, valid_loader)
-    print(result)
+#     result = validate_epoch(args, model, valid_loader)
+    predictions = validate_epoch(args, model, valid_loader)
+    valid_data['predictions'] = predictions
+    valid_data.to_json(f'/content/drive/MyDrive/music-bot/tmp_pred_{np.random.randint(100)}.json')
+    print(predictions)
